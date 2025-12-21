@@ -1,4 +1,4 @@
 #pragma once
 
-int strLen(char* str);
-int strCompare(char* str1, char* str2);
+int strLen(const char* str);
+int strCompare(const char* str1, const char* str2);

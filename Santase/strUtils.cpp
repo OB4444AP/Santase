@@ -1,17 +1,18 @@
 #include <iostream>
 #include "strUtils.h"
 
-int strLen(char* str) {
+int strLen(const char* str) {
     int len = 0;
 
     while (*str != '\0') {
         len++;
+        str++;
     }
 
     return len;
 }
 
-int strCompare(char* str1, char* str2) {
+int strCompare(const char* str1, const char* str2) {
     if (str1 == nullptr || str2 == nullptr) {
         std::cout << "nullptr error";
         return 0;
