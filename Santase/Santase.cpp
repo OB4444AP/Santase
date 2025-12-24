@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <windows.h>;
 #include "strUtils.h"
 
 const int PLAYER_HAND = 6;
@@ -64,6 +65,90 @@ int pickTrumpSuit(Talon& talon) {
     return c.suit;
 }
 
+char digToChar(int n) {
+    if (n < 0 || n > 9) {
+        std::cout << "digToChar error";
+        return '?';
+    }
+
+    return n + '0';
+}
+
+void setColor(int color) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (color));
+}
+
+enum class Color
+{
+    Black = 0,
+    Blue = 1,
+    Green = 2,
+    Aqua = 3,
+    Red = 4,
+    Purple = 5,
+    Yellow = 6,
+    White = 7,
+    Gray = 8,
+    LightBlue = 9,
+    LightGreen = 10,
+    LightAqua = 11,
+    LightRed = 12,
+    LightPurple = 13,
+    LightYellow = 14,
+    BrightWhite
+};
+
+void printCard(const Card c) {
+    char value = '0';
+
+    switch (c.value) {
+    case 11: {
+        value = 'J';
+        break;
+    }
+    case 12: {
+        value = 'Q';
+        break;
+    }
+    case 13: {
+        value = 'K';
+        break;
+    }
+    case 14: {
+        value = 'A';
+        break;
+    }
+    default: {
+        value = digToChar(c.value);
+        break;
+    }
+    }
+
+    switch (c.suit) {
+    case 1: {
+        setColor(Color::BrightWhite);
+        std::cout << value << "\xE2\x99\xA0";
+        break;
+    }
+    case 2: {
+        setColor(Color::LightRed);
+        std::cout << value << "\xE2\x99\xA5";
+        break;
+    }
+    case 3: {
+        setColor(Color::LightRed);
+        std::cout << value << "\xE2\x99\xA6";
+        break;
+    }
+    case 4: {
+        setColor(Color::BrightWhite);
+        std::cout << value << "\xE2\x99\xA3";
+        break;
+    }
+    }
+    return;
+}
+
 void gameStart() {
     Player p1, p2;
     Talon talon;
@@ -88,6 +173,7 @@ void commandIn() {
 
 int main()
 {
+    SetConsoleOutputCP(CP_UTF8);
     srand(time(nullptr));
 
     commandIn();
