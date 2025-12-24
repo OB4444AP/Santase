@@ -57,12 +57,22 @@ void deal(Player& p1, Player& p2, Talon& talon) {
     }
 }
 
+int pickTrumpSuit(Talon& talon) {
+    Card c = drawCard(talon);
+    talon.talon[(TALON_SIZE - 2 * PLAYER_HAND) - 1] = c;
+
+    return c.suit;
+}
+
 void gameStart() {
     Player p1, p2;
     Talon talon;
 
     initTalon(talon);
     deal(p1, p2, talon);
+
+    const int TRUMP_SUIT = pickTrumpSuit(talon);
+    
 }
 
 void commandIn() {
