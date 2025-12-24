@@ -65,19 +65,6 @@ int pickTrumpSuit(Talon& talon) {
     return c.suit;
 }
 
-char digToChar(int n) {
-    if (n < 0 || n > 9) {
-        std::cout << "digToChar error";
-        return '?';
-    }
-
-    return n + '0';
-}
-
-void setColor(int color) {
-    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (color));
-}
-
 enum class Color
 {
     Black = 0,
@@ -95,31 +82,37 @@ enum class Color
     LightRed = 12,
     LightPurple = 13,
     LightYellow = 14,
-    BrightWhite
+    BrightWhite = 15
 };
 
-void printCard(const Card c) {
-    char value = '0';
+void setColor(Color color) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (int)color);
+}
 
+void printCard(const Card c) {
     switch (c.value) {
-    case 11: {
-        value = 'J';
+    case 1: {
+        std::cout << 9;
         break;
     }
-    case 12: {
-        value = 'Q';
+    case 2: {
+        std::cout << 10;
         break;
     }
-    case 13: {
-        value = 'K';
+    case 3: {
+        std::cout << 'J';
         break;
     }
-    case 14: {
-        value = 'A';
+    case 4: {
+        std::cout << 'Q';
         break;
     }
-    default: {
-        value = digToChar(c.value);
+    case 5: {
+        std::cout << 'K';
+        break;
+    }
+    case 6: {
+        std::cout <<'A';
         break;
     }
     }
@@ -127,25 +120,27 @@ void printCard(const Card c) {
     switch (c.suit) {
     case 1: {
         setColor(Color::BrightWhite);
-        std::cout << value << "\xE2\x99\xA0";
+        std::cout << "\xE2\x99\xA0";
         break;
     }
     case 2: {
         setColor(Color::LightRed);
-        std::cout << value << "\xE2\x99\xA5";
+        std::cout << "\xE2\x99\xA5";
         break;
     }
     case 3: {
         setColor(Color::LightRed);
-        std::cout << value << "\xE2\x99\xA6";
+        std::cout << "\xE2\x99\xA6";
         break;
     }
     case 4: {
         setColor(Color::BrightWhite);
-        std::cout << value << "\xE2\x99\xA3";
+        std::cout << "\xE2\x99\xA3";
         break;
     }
     }
+
+    setColor(Color::White);
     return;
 }
 
