@@ -58,11 +58,11 @@ void deal(Player& p1, Player& p2, Talon& talon) {
     }
 }
 
-int pickTrumpSuit(Talon& talon) {
+Card pickTrumpSuit(Talon& talon) {
     Card c = drawCard(talon);
     talon.talon[(TALON_SIZE - 2 * PLAYER_HAND) - 1] = c;
 
-    return c.suit;
+    return c;
 }
 
 enum class Color
@@ -89,34 +89,7 @@ void setColor(Color color) {
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), (int)color);
 }
 
-void printCard(const Card c) {
-    switch (c.value) {
-    case 1: {
-        std::cout << 9;
-        break;
-    }
-    case 2: {
-        std::cout << 10;
-        break;
-    }
-    case 3: {
-        std::cout << 'J';
-        break;
-    }
-    case 4: {
-        std::cout << 'Q';
-        break;
-    }
-    case 5: {
-        std::cout << 'K';
-        break;
-    }
-    case 6: {
-        std::cout <<'A';
-        break;
-    }
-    }
-
+void printSuit(const Card c) {
     switch (c.suit) {
     case 1: {
         setColor(Color::BrightWhite);
@@ -144,15 +117,51 @@ void printCard(const Card c) {
     return;
 }
 
+void printCard(const Card c) {
+    switch (c.value) {
+    case 1: {
+        std::cout << 9;
+        printSuit(c);
+        break;
+    }
+    case 2: {
+        std::cout << 10;
+        printSuit(c);
+        break;
+    }
+    case 3: {
+        std::cout << 'J';
+        printSuit(c);
+        break;
+    }
+    case 4: {
+        std::cout << 'Q';
+        printSuit(c);
+        break;
+    }
+    case 5: {
+        std::cout << 'K';
+        printSuit(c);
+        break;
+    }
+    case 6: {
+        std::cout <<'A';
+        printSuit(c);
+        break;
+    }
+    }
+    
+    return;
+}
+
 void gameStart() {
     Player p1, p2;
     Talon talon;
 
     initTalon(talon);
-    deal(p1, p2, talon);
+    deal(p1, p2, talon);    
 
-    const int TRUMP_SUIT = pickTrumpSuit(talon);
-    
+    const Card TRUMP_CARD = pickTrumpSuit(talon);
 }
 
 void commandIn() {
