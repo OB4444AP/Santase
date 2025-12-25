@@ -7,6 +7,7 @@
 const int PLAYER_HAND = 6;
 const int TALON_SIZE = 24;
 const int COMMAND_MAX_SIZE = 50;
+const size_t MAX_STR_LEN = 1024;
 
 struct Card {
     int suit;// 1 - spades ; 2 - hearts ; 3 - diamonds ; 4 - clubs
@@ -19,6 +20,14 @@ struct Player {
 
 struct Talon {
     Card* talon = new Card[TALON_SIZE];
+};
+
+struct Settings {
+    int pointsToWin = 11;
+    int marriagePoints_nonTrump = 20;
+    int marriagePoints_trump = 40;
+    bool showPlayerPoints = 0;
+    bool lastTrickBonus = 1;
 };
 
 Card drawCard(Talon& talon) {
@@ -154,7 +163,48 @@ void printCard(const Card c) {
     return;
 }
 
-void gameStart() {
+int getPointsToWin(Settings settings) {
+    return settings.pointsToWin;
+}
+
+void changePointsToWin(Settings settings) {
+    std::cout << "Change target points to win to:" << ' ';
+    char strPoints[MAX_STR_LEN];
+    std::cin >> strPoints;
+    std::cout << std::endl;
+    
+    while (!strIsPosNum(strPoints) || strIsZero(strPoints)) {
+        std::cout << "Invalid target points to win. Try again:";
+        std::cin >> strPoints;
+    }
+
+    int points = strToNum(strPoints);
+
+    settings.pointsToWin = points;
+    std::cout << "Succesfully changed target points to win to: " << getPointsToWin(settings);
+}
+
+void changeSettings(Settings settings) {
+    std::cout << "SANTASE(66)\n";
+    std::cout << "1) Target points to win [" << getPointsToWin(settings) << "]\n";
+    std::cout << "2) Marriage points(non - trump / trump) [20 / 40]\n";
+    std::cout << "3) Show players' points [on]\n";
+    std::cout << "4) Last trick + 10 [on]\n";
+    std::cout << "Enter number to change or press any other key to return:";
+
+    char c;
+    std::cin >> c;
+
+    switch (c) {
+    case '1': {
+        changePointsToWin(settings);
+        break;
+    }
+    }
+}
+
+
+void gameStart(Settings settings) {
     Player p1, p2;
     Talon talon;
 
@@ -164,13 +214,19 @@ void gameStart() {
     const Card TRUMP_CARD = pickTrumpSuit(talon);
 }
 
-void commandIn() {
+void commandIn(Settings settings) {
     char command [COMMAND_MAX_SIZE];
     std::cin.getline(command, COMMAND_MAX_SIZE);
 
     char start[] = "start";
     if (strCompare(command, start) == 0) {
-        gameStart();
+        gameStart(settings);
+        return;
+    }
+
+    char settingsStr[] = "settings";
+    if (strCompare(command, settingsStr) == 0) {
+        changeSettings(settings);
         return;
     }
 }
@@ -179,8 +235,9 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     srand(time(nullptr));
+    Settings settings;
 
-    commandIn();
+    commandIn(settings);
 
     return 0;
 }

@@ -2,6 +2,10 @@
 #include "strUtils.h"
 
 int strLen(const char* str) {
+    if (str == nullptr) {
+        std::cout << "nullptr error";
+        return -1;
+    }
     int len = 0;
 
     while (*str != '\0') {
@@ -44,6 +48,35 @@ bool strIsNum(char* str) {
     }
     
     return 1;
+}
+
+bool strIsPosNum(char* str) {
+    if (str == nullptr) {
+        std::cout << "nullptr error";
+        return 0;
+    }
+
+    if (*str == '-') {
+        return 0;
+    }
+
+    while (*str != '\0') {
+        if (*str < '0' || *str > '9') {
+            return 0;
+        }
+        str++;
+    }
+
+    return 1;
+}
+
+bool strIsZero(char* str) {
+    if (str == nullptr) {
+        std::cout << "nullptr error";
+        return 0;
+    }
+
+    return (str[0] == '0' && str[1] == '\0');
 }
 
 int strToNum(char* str) {
