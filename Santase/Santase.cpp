@@ -168,7 +168,7 @@ void commandIn() {
     char command [COMMAND_MAX_SIZE];
     std::cin.getline(command, COMMAND_MAX_SIZE);
 
-    char start[6] = "start";
+    char start[] = "start";
     if (strCompare(command, start) == 0) {
         gameStart();
         return;
