@@ -79,6 +79,15 @@ bool strIsZero(char* str) {
     return (str[0] == '0' && str[1] == '\0');
 }
 
+bool strIsOne(char* str) {
+    if (str == nullptr) {
+        std::cout << "nullptr error";
+        return 0;
+    }
+
+    return (str[0] == '1' && str[1] == '\0');
+}
+
 int strToNum(char* str) {
     if (str == nullptr) {
         std::cout << "nullptr error";
@@ -86,7 +95,7 @@ int strToNum(char* str) {
     }
 
     if (!strIsNum(str)) {
-        std::cout << "This string isnt a number.";
+        std::cout << "This string isnt a number error \n";
         return 0;
     }
 
