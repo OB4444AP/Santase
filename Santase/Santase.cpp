@@ -7,6 +7,7 @@
 const int PLAYER_HAND = 6;
 const int TALON_SIZE = 24;
 const int COMMAND_MAX_SIZE = 50;
+const size_t MAX_STR_LEN = 1024;
 
 struct Card {
     int suit;// 1 - spades ; 2 - hearts ; 3 - diamonds ; 4 - clubs
@@ -15,10 +16,19 @@ struct Card {
 
 struct Player {
     Card* hand = new Card[PLAYER_HAND];
+    int points = 0;
 };
 
 struct Talon {
     Card* talon = new Card[TALON_SIZE];
+};
+
+struct Settings {
+    int pointsToWin = 11;
+    int marriagePoints_nonTrump = 20;
+    int marriagePoints_trump = 40;
+    bool showPlayerPoints = 0;
+    bool lastTrickBonus = 1;
 };
 
 Card drawCard(Talon& talon) {
@@ -154,7 +164,90 @@ void printCard(const Card c) {
     return;
 }
 
-void gameStart() {
+int getPointsToWin(Settings settings) {
+    return settings.pointsToWin;
+}
+
+void changePointsToWin(Settings settings) {
+    std::cout << "\nChange target points to win to: ";
+    char strPoints[MAX_STR_LEN];
+    std::cin >> strPoints;
+    
+    while (!strIsPosNum(strPoints) || strIsZero(strPoints)) {
+        std::cout << "Invalid target points to win. Try again:";
+        std::cin >> strPoints;
+    }
+
+    settings.pointsToWin = strToNum(strPoints);
+    std::cout << "Succesfully changed target points to win [" << getPointsToWin(settings) << ']';
+}
+
+int getTrumpMarriagePoints(Settings settings) {
+    return settings.marriagePoints_trump;
+}
+
+int getNonTrumpMarriagePoints(Settings settings) {
+    return settings.marriagePoints_nonTrump;
+}
+
+void changeMarriagePoints(Settings settings) {
+    std::cout << "\nChange non trump marriage points to: ";
+    char nonTrumpMarriage[MAX_STR_LEN];
+    std::cin >> nonTrumpMarriage;
+
+    while (!strIsPosNum(nonTrumpMarriage) || strIsZero(nonTrumpMarriage)) {
+        std::cout << "Invalid non trump marriage points. Try again:";
+        std::cin >> nonTrumpMarriage;
+    }
+
+    std::cout << "\nChange trump marriage points to: ";
+    char trumpMarriage[MAX_STR_LEN];
+    std::cin >> trumpMarriage;
+
+    while (!strIsPosNum(trumpMarriage) || strIsZero(trumpMarriage)) {
+        std::cout << "Invalid trump marriage points. Try again:";
+        std::cin >> trumpMarriage;
+    }
+
+    settings.marriagePoints_nonTrump = strToNum(nonTrumpMarriage);
+    settings.marriagePoints_trump = strToNum(trumpMarriage);
+    std::cout << "\nSuccesfully changed marriage points (non - trump / trump) [ ";
+    std::cout << getNonTrumpMarriagePoints(settings) << " / " << getTrumpMarriagePoints(settings) << " ]";
+}
+
+void changeSettings(Settings settings) {
+    std::cout << "\nSANTASE(66)\n";
+    std::cout << "1) Target points to win [" << getPointsToWin(settings) << "]\n";
+    std::cout << "2) Marriage points(non - trump / trump) [" << getNonTrumpMarriagePoints(settings);
+    std::cout << " / " << getTrumpMarriagePoints(settings) << "]\n";
+    std::cout << "3) Show players' points [on]\n";
+    std::cout << "4) Last trick + 10 [on]\n";
+    std::cout << "\nEnter number to change or press 0 to return:";
+
+    char c;
+    std::cin >> c;
+
+    while (c != '0') {
+        switch (c) {
+        case '1': {
+            changePointsToWin(settings);
+            break;
+        }
+        case '2': {
+            changeMarriagePoints(settings);
+            break;
+        }
+        }
+
+        std::cout << "\n\nEnter number to change or press 0 to return:";
+        std::cin >> c;
+    }
+
+    commandIn(settings);
+}
+
+
+void gameStart(Settings settings) {
     Player p1, p2;
     Talon talon;
 
@@ -164,13 +257,19 @@ void gameStart() {
     const Card TRUMP_CARD = pickTrumpSuit(talon);
 }
 
-void commandIn() {
+void commandIn(Settings settings) {
     char command [COMMAND_MAX_SIZE];
     std::cin.getline(command, COMMAND_MAX_SIZE);
 
-    char start[6] = "start";
+    char start[] = "start";
     if (strCompare(command, start) == 0) {
-        gameStart();
+        gameStart(settings);
+        return;
+    }
+
+    char settingsStr[] = "settings";
+    if (strCompare(command, settingsStr) == 0) {
+        changeSettings(settings);
         return;
     }
 }
@@ -179,8 +278,9 @@ int main()
 {
     SetConsoleOutputCP(CP_UTF8);
     srand(time(nullptr));
+    Settings settings;
 
-    commandIn();
+    commandIn(settings);
 
     return 0;
 }
