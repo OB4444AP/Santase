@@ -16,6 +16,7 @@ struct Card {
 
 struct Player {
     Card* hand = new Card[PLAYER_HAND];
+    int points = 0;
 };
 
 struct Talon {
@@ -168,39 +169,81 @@ int getPointsToWin(Settings settings) {
 }
 
 void changePointsToWin(Settings settings) {
-    std::cout << "Change target points to win to:" << ' ';
+    std::cout << "\nChange target points to win to: ";
     char strPoints[MAX_STR_LEN];
     std::cin >> strPoints;
-    std::cout << std::endl;
     
     while (!strIsPosNum(strPoints) || strIsZero(strPoints)) {
         std::cout << "Invalid target points to win. Try again:";
         std::cin >> strPoints;
     }
 
-    int points = strToNum(strPoints);
+    settings.pointsToWin = strToNum(strPoints);
+    std::cout << "Succesfully changed target points to win [" << getPointsToWin(settings) << ']';
+}
 
-    settings.pointsToWin = points;
-    std::cout << "Succesfully changed target points to win to: " << getPointsToWin(settings);
+int getTrumpMarriagePoints(Settings settings) {
+    return settings.marriagePoints_trump;
+}
+
+int getNonTrumpMarriagePoints(Settings settings) {
+    return settings.marriagePoints_nonTrump;
+}
+
+void changeMarriagePoints(Settings settings) {
+    std::cout << "\nChange non trump marriage points to: ";
+    char nonTrumpMarriage[MAX_STR_LEN];
+    std::cin >> nonTrumpMarriage;
+
+    while (!strIsPosNum(nonTrumpMarriage) || strIsZero(nonTrumpMarriage)) {
+        std::cout << "Invalid non trump marriage points. Try again:";
+        std::cin >> nonTrumpMarriage;
+    }
+
+    std::cout << "\nChange trump marriage points to: ";
+    char trumpMarriage[MAX_STR_LEN];
+    std::cin >> trumpMarriage;
+
+    while (!strIsPosNum(trumpMarriage) || strIsZero(trumpMarriage)) {
+        std::cout << "Invalid trump marriage points. Try again:";
+        std::cin >> trumpMarriage;
+    }
+
+    settings.marriagePoints_nonTrump = strToNum(nonTrumpMarriage);
+    settings.marriagePoints_trump = strToNum(trumpMarriage);
+    std::cout << "\nSuccesfully changed marriage points (non - trump / trump) [ ";
+    std::cout << getNonTrumpMarriagePoints(settings) << " / " << getTrumpMarriagePoints(settings) << " ]";
 }
 
 void changeSettings(Settings settings) {
-    std::cout << "SANTASE(66)\n";
+    std::cout << "\nSANTASE(66)\n";
     std::cout << "1) Target points to win [" << getPointsToWin(settings) << "]\n";
-    std::cout << "2) Marriage points(non - trump / trump) [20 / 40]\n";
+    std::cout << "2) Marriage points(non - trump / trump) [" << getNonTrumpMarriagePoints(settings);
+    std::cout << " / " << getTrumpMarriagePoints(settings) << "]\n";
     std::cout << "3) Show players' points [on]\n";
     std::cout << "4) Last trick + 10 [on]\n";
-    std::cout << "Enter number to change or press any other key to return:";
+    std::cout << "\nEnter number to change or press 0 to return:";
 
     char c;
     std::cin >> c;
 
-    switch (c) {
-    case '1': {
-        changePointsToWin(settings);
-        break;
+    while (c != '0') {
+        switch (c) {
+        case '1': {
+            changePointsToWin(settings);
+            break;
+        }
+        case '2': {
+            changeMarriagePoints(settings);
+            break;
+        }
+        }
+
+        std::cout << "\n\nEnter number to change or press 0 to return:";
+        std::cin >> c;
     }
-    }
+
+    commandIn(settings);
 }
 
 
