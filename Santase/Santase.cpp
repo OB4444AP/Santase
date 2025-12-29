@@ -257,6 +257,45 @@ void changeShowPlayerPoints(Settings settings) {
     return;
 }
 
+void printLastTrickBonus(const Settings settings) {
+    if (settings.lastTrickBonus) {
+        std::cout << "on";
+        return;
+    }
+
+    std::cout << "off";
+    return;
+}
+
+void changeLastTrickBonus(Settings settings) {
+    std::cout << "\nChange last trick +10 (on / off): ";
+    char lastTrickBonus[MAX_STR_LEN];
+    std::cin >> lastTrickBonus;
+
+    char on[] = "on";
+    char off[] = "off";
+    bool lastTrick = 0;
+
+    while (true) {
+        if (strCompare(lastTrickBonus, on) == 0) {
+            lastTrick = 1;
+            break;
+        }
+        if (strCompare(lastTrickBonus, off) == 0) {
+            lastTrick = 0;
+            break;
+        }
+
+        std::cout << "Invalid input. Try \"on\" or \"off\" : ";
+        std::cin >> lastTrickBonus;
+    }
+
+    settings.lastTrickBonus = lastTrick;
+    std::cout << "Successfully turned last trick +10 ";
+    printLastTrickBonus(settings);
+    return;
+}
+
 void changeSettings(Settings settings) {
     std::cout << "\nSANTASE(66)\n";
     std::cout << "1) Target points to win [" << getPointsToWin(settings) << "]\n";
@@ -265,7 +304,9 @@ void changeSettings(Settings settings) {
     std::cout << "3) Show players' points [";
     printShowPlayerPoints(settings);
     std::cout << "]\n";
-    std::cout << "4) Last trick + 10 [on]\n";
+    std::cout << "4) Last trick + 10 [";
+    printLastTrickBonus(settings);
+    std::cout << "]\n";
     std::cout << "\nEnter number to change or press 0 to return: ";
 
     char c;
@@ -283,6 +324,10 @@ void changeSettings(Settings settings) {
         }
         case '3': {
             changeShowPlayerPoints(settings);
+            break;
+        }
+        case '4': {
+            changeLastTrickBonus(settings);
             break;
         }
         }
