@@ -164,7 +164,7 @@ void printCard(const Card c) {
     return;
 }
 
-int getPointsToWin(Settings settings) {
+int getPointsToWin(const Settings settings) {
     return settings.pointsToWin;
 }
 
@@ -174,19 +174,19 @@ void changePointsToWin(Settings settings) {
     std::cin >> strPoints;
     
     while (!strIsPosNum(strPoints) || strIsZero(strPoints)) {
-        std::cout << "Invalid target points to win. Try again:";
+        std::cout << "Invalid target points to win. Try again: ";
         std::cin >> strPoints;
     }
 
     settings.pointsToWin = strToNum(strPoints);
-    std::cout << "Succesfully changed target points to win [" << getPointsToWin(settings) << ']';
+    std::cout << "Successfully changed target points to win [" << getPointsToWin(settings) << ']';
 }
 
-int getTrumpMarriagePoints(Settings settings) {
+int getTrumpMarriagePoints(const Settings settings) {
     return settings.marriagePoints_trump;
 }
 
-int getNonTrumpMarriagePoints(Settings settings) {
+int getNonTrumpMarriagePoints(const Settings settings) {
     return settings.marriagePoints_nonTrump;
 }
 
@@ -196,7 +196,7 @@ void changeMarriagePoints(Settings settings) {
     std::cin >> nonTrumpMarriage;
 
     while (!strIsPosNum(nonTrumpMarriage) || strIsZero(nonTrumpMarriage)) {
-        std::cout << "Invalid non trump marriage points. Try again:";
+        std::cout << "Invalid non trump marriage points. Try again: ";
         std::cin >> nonTrumpMarriage;
     }
 
@@ -205,14 +205,95 @@ void changeMarriagePoints(Settings settings) {
     std::cin >> trumpMarriage;
 
     while (!strIsPosNum(trumpMarriage) || strIsZero(trumpMarriage)) {
-        std::cout << "Invalid trump marriage points. Try again:";
+        std::cout << "Invalid trump marriage points. Try again: ";
         std::cin >> trumpMarriage;
     }
 
     settings.marriagePoints_nonTrump = strToNum(nonTrumpMarriage);
     settings.marriagePoints_trump = strToNum(trumpMarriage);
-    std::cout << "\nSuccesfully changed marriage points (non - trump / trump) [ ";
+    std::cout << "\nSuccessfully changed marriage points (non - trump / trump) [ ";
     std::cout << getNonTrumpMarriagePoints(settings) << " / " << getTrumpMarriagePoints(settings) << " ]";
+}
+
+bool getShowPlayerPoints(const Settings settings){
+    return settings.showPlayerPoints;
+}
+
+void printShowPlayerPoints(const Settings settings) {
+    if (settings.showPlayerPoints) {
+        std::cout << "on";
+        return;
+    }
+
+    std::cout << "off";
+    return;
+}
+
+void changeShowPlayerPoints(Settings settings) {
+    std::cout << "\nChange show player points (on / off): ";
+    char showPlayerPoints[MAX_STR_LEN];
+    std::cin >> showPlayerPoints;
+
+    char on[] = "on";
+    char off[] = "off";
+    int playerPoints = 0;
+    while (true) {
+        if (strCompare(showPlayerPoints, on) == 0) {
+            playerPoints = 1;
+            break;
+        }
+        if (strCompare(showPlayerPoints, off) == 0) {
+            playerPoints = 0;
+            break;
+        }
+
+        std::cout << "Invalid input. Try \"on\" or \"off\" : ";
+        std::cin >> showPlayerPoints;
+    }
+
+    settings.showPlayerPoints = playerPoints;
+    std::cout << "Successfully turned show player points ";
+    printShowPlayerPoints(settings);
+    return;
+}
+
+void printLastTrickBonus(const Settings settings) {
+    if (settings.lastTrickBonus) {
+        std::cout << "on";
+        return;
+    }
+
+    std::cout << "off";
+    return;
+}
+
+void changeLastTrickBonus(Settings settings) {
+    std::cout << "\nChange last trick +10 (on / off): ";
+    char lastTrickBonus[MAX_STR_LEN];
+    std::cin >> lastTrickBonus;
+
+    char on[] = "on";
+    char off[] = "off";
+    bool lastTrick = 0;
+
+    while (true) {
+        if (strCompare(lastTrickBonus, on) == 0) {
+            lastTrick = 1;
+            break;
+        }
+        if (strCompare(lastTrickBonus, off) == 0) {
+            lastTrick = 0;
+            break;
+        }
+
+        std::cout << "Invalid input. Try \"on\" or \"off\" : ";
+        std::cin >> lastTrickBonus;
+    }
+
+    settings.lastTrickBonus = lastTrick;
+    std::cout << "Successfully turned last trick +10 ";
+    printLastTrickBonus(settings);
+    return;
 }
 
 void changeSettings(Settings settings) {
@@ -220,9 +301,13 @@ void changeSettings(Settings settings) {
     std::cout << "1) Target points to win [" << getPointsToWin(settings) << "]\n";
     std::cout << "2) Marriage points(non - trump / trump) [" << getNonTrumpMarriagePoints(settings);
     std::cout << " / " << getTrumpMarriagePoints(settings) << "]\n";
-    std::cout << "3) Show players' points [on]\n";
-    std::cout << "4) Last trick + 10 [on]\n";
-    std::cout << "\nEnter number to change or press 0 to return:";
+    std::cout << "3) Show players' points [";
+    printShowPlayerPoints(settings);
+    std::cout << "]\n";
+    std::cout << "4) Last trick + 10 [";
+    printLastTrickBonus(settings);
+    std::cout << "]\n";
+    std::cout << "\nEnter number to change or press 0 to return: ";
 
     char c;
     std::cin >> c;
@@ -237,13 +322,19 @@ void changeSettings(Settings settings) {
             changeMarriagePoints(settings);
             break;
         }
+        case '3': {
+            changeShowPlayerPoints(settings);
+            break;
+        }
+        case '4': {
+            changeLastTrickBonus(settings);
+            break;
+        }
         }
 
-        std::cout << "\n\nEnter number to change or press 0 to return:";
+        std::cout << "\n\nEnter number to change or press 0 to return: ";
         std::cin >> c;
     }
-
-    commandIn(settings);
 }
 
 
