@@ -387,27 +387,34 @@ void printRules(const Settings settings) {
 }
 
 void commandIn(Settings settings) {
+    std::cout << "Input command: ";
     char command [COMMAND_MAX_SIZE];
-    std::cin.getline(command, COMMAND_MAX_SIZE);
+    std::cin >> command;
 
     char start[] = "start";
 
     while (strCompare(command, start) != 0) {
         if (strCompare(command, start) == 0) {
             gameStart(settings);
-            return;
         }
 
         char settingsStr[] = "settings";
         if (strCompare(command, settingsStr) == 0) {
             changeSettings(settings);
-            return;
         }
 
         char rules[] = "rules";
         if (strCompare(command, rules) == 0) {
             printRules(settings);
-            break;
+        }
+
+        if (strCompare(command, rules) != 0 && strCompare(command, settingsStr) != 0 && strCompare(command, start) != 0) {
+            std::cout << "Invalid command. Try again: ";
+            std::cin >> command;
+        }
+        else {
+            std::cout << "\n\nInput command: ";
+            std::cin >> command;
         }
     }
 }
