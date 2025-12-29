@@ -234,12 +234,22 @@ void changeShowPlayerPoints(Settings settings) {
     char showPlayerPoints[MAX_STR_LEN];
     std::cin >> showPlayerPoints;
 
-    while (!strIsNum(showPlayerPoints) && (strIsZero(showPlayerPoints) || strIsOne(showPlayerPoints))) {
-        std::cout << "Invalid input. Try 1 (on) or 0 (off) : ";
+    char on[] = "on";
+    char off[] = "off";
+    int playerPoints = 0;
+    while (true) {
+        if (strCompare(showPlayerPoints, on) == 0) {
+            playerPoints = 1;
+            break;
+        }
+        if (strCompare(showPlayerPoints, off) == 0) {
+            playerPoints = 0;
+            break;
+        }
+
+        std::cout << "Invalid input. Try \"on\" or \"off\" : ";
         std::cin >> showPlayerPoints;
     }
-
-    int playerPoints = strToNum(showPlayerPoints);
 
     settings.showPlayerPoints = playerPoints;
     std::cout << "Successfully turned show player points ";
