@@ -348,20 +348,67 @@ void gameStart(Settings settings) {
     const Card TRUMP_CARD = pickTrumpSuit(talon);
 }
 
+void printRules(const Settings settings) {
+    std::cout << "\nSANTASE (66)\nEach player gets 6 cards.The Trump suit is chosen at random.\nCard values : A = 11, 10 = 10, K = 4, Q = 3, J = 2, 9 = 0.\n";
+    std::cout << "A marriage (K + Q of the same suit) gives " << getNonTrumpMarriagePoints(settings) << " points, or ";
+    std::cout << getTrumpMarriagePoints(settings) << " if the trump suit.\n";
+    std::cout << "The first player to reach 66 points wins the round.\n";
+    std::cout << "At the start of the game the rules are relaxed.\n";
+    std::cout << "This means both players can play any card of their choice and they are not obliged to follow suit.\n";
+    std::cout << "The highest card of the led suit wins. If only one player played a trump he wins the trick no matter the value of the\n";
+    std::cout << "trump card.\n";
+    std::cout << "The player that wins the trick gets the points of the two cards played added to their total points.\n";
+    std::cout << "Then both players draw a card (if possible) so they both have 6 cards again.\n";
+    std::cout << "The player that won the trick draws first.\n";
+    std::cout << "If a player has the 9 of Trumps and it is their turn they can swap it for the bottom card in the talon.\n";
+    std::cout << "If a player has both the King and Queen of the same suit\n";
+    std::cout << "and they have won at least one trick and it is their turn\n";
+    std::cout << "they can play one of them and declare a marriage.\n\n";
+    std::cout << "If a player decides to close the talon or the talon runs out of cards the rules become strict.\n";
+    std::cout << "A player can close the talon any time its their turn.\n\n";
+    std::cout << "Players must now follow suits (if your opponent plays a Spade you must also play a Spade).\n";
+    std::cout << "Players must win the trick if possible. They have to play a higher card than their opponent if they can.\n";
+    std::cout << "If a player cannot follow suit they must play a trump card.\n";
+    std::cout << "If a player cannot follow suit or trump they can play any card they want.\n";
+    std::cout << "Players do not draw cards after tricks.\n\n";
+    std::cout << "If a player thinks they have reached 66 points they can announce it any time during the game.\n";
+    std::cout << "When a player announces they have 66 points or both players run out of cards scoring begins.\n\n";
+    std::cout << "If the player who announced \"66\" has at least 66 points the points are as follows:\n";
+    std::cout << "1 Point: If the opponent has 33 points or more.\n";
+    std::cout << "2 Points: If the opponent has 32 points or fewer, but won at least one trick.\n";
+    std::cout << "3 Points: If the opponent won 0 tricks.\n";
+    std::cout << "If the player who announces \"66\" has less than 66 points he gets 0 points.\n";
+    std::cout << "His opponent gets 2 points instead. Or 3 points if the announcing player has won 0 tricks.\n";
+    std::cout << "If a player closes the talon and fails to get to 66 points their opponent gets 2 points\n";
+    std::cout << "or 3 if the closing player has won 0 tricks.\n";
+    std::cout << "When the talon has no cards and both players play their last cards the winning player gets +10 extra points.\n";
+    std::cout << "If the game is played to its end and neither player announced \"66\" or closes the talon\n";
+    std::cout << "the player with more points wins 1 point. In case of a tie the player who won the last trick wins 1 point.";
+}
+
 void commandIn(Settings settings) {
     char command [COMMAND_MAX_SIZE];
     std::cin.getline(command, COMMAND_MAX_SIZE);
 
     char start[] = "start";
-    if (strCompare(command, start) == 0) {
-        gameStart(settings);
-        return;
-    }
 
-    char settingsStr[] = "settings";
-    if (strCompare(command, settingsStr) == 0) {
-        changeSettings(settings);
-        return;
+    while (strCompare(command, start) != 0) {
+        if (strCompare(command, start) == 0) {
+            gameStart(settings);
+            return;
+        }
+
+        char settingsStr[] = "settings";
+        if (strCompare(command, settingsStr) == 0) {
+            changeSettings(settings);
+            return;
+        }
+
+        char rules[] = "rules";
+        if (strCompare(command, rules) == 0) {
+            printRules(settings);
+            break;
+        }
     }
 }
 
