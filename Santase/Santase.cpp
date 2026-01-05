@@ -337,6 +337,26 @@ void changeSettings(Settings settings) {
     }
 }
 
+void sortHand(Player& p) {
+    for (int i = 0; i < PLAYER_HAND - 1; i++) {
+        for (int j = 0; j < PLAYER_HAND - i - 1; j++) {
+            if (p.hand[j].value < p.hand[j + 1].value) {
+                Card c = p.hand[j + 1];
+                p.hand[j + 1] = p.hand[j];
+                p.hand[j] = c;
+            }
+        }
+    }
+    for (int i = 0; i < PLAYER_HAND - 1; i++) {
+        for (int j = 0; j < PLAYER_HAND - i - 1; j++) {
+            if (p.hand[j].suit > p.hand[j + 1].suit) {
+                Card c = p.hand[j + 1];
+                p.hand[j + 1] = p.hand[j];
+                p.hand[j] = c;
+            }
+        }
+    }
+}
 
 void gameStart(Settings settings) {
     Player p1, p2;
@@ -393,7 +413,7 @@ void commandIn(Settings settings) {
 
     char start[] = "start";
 
-    while (strCompare(command, start) != 0) {
+    do {
         if (strCompare(command, start) == 0) {
             gameStart(settings);
         }
@@ -416,7 +436,7 @@ void commandIn(Settings settings) {
             std::cout << "\n\nInput command: ";
             std::cin >> command;
         }
-    }
+    } while (strCompare(command, start) != 0);
 }
 
 int main()
