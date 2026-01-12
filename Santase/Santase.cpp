@@ -149,13 +149,7 @@ void printCard(const Card c) {
     return;
 }
 
-void playCard(Player& p, Talon& talon, int index) {
-    if (index < 0 || index >= p.handSize) {
-        std::cout << "invalid index" << " " << index;
-        return;
-    }
-    std::cout << index << std::endl;
-    
+Card playCard(Player& p, Talon& talon, int index) {
     Card c = p.hand[index];
 
     for (int i = index; i < p.handSize - 1; i++) {
@@ -165,7 +159,7 @@ void playCard(Player& p, Talon& talon, int index) {
     }
 
     p.hand[p.handSize - 1] = drawCard(talon);
-    printCard(c);
+    return c;
 }
 
 void printHand(const Player p) {
@@ -391,25 +385,39 @@ void changeSettings(Settings settings) {
     }
 }
 
-void playerCommand(const Settings settings, Player p, Talon talon) {
-    std::cout << "> ";
+Card* playerCommand(const Settings settings, Player p, Talon talon) {
     char command[COMMAND_MAX_SIZE];
-    std::cin.getline(command, COMMAND_MAX_SIZE - 1);
 
-    char hand[] = "hand";
-    if (strCompare(command, hand) == 0) {
-        sortHand(p);
-        printHand(p);
-        std::cout << std::endl;
-    }
+    while (true) {
+        std::cout << "> ";
+        std::cin.getline(command, COMMAND_MAX_SIZE - 1);
 
-    char play[] = "play ";
-    if (startsWith(command, play)) {
-        int lastIndex = strLen(command) - 1;
-        int index = charToNum(command[lastIndex]);
-        std::cout << "Player P" << p.name << " played ";
-        playCard(p, talon, index);
-        std::cout << std::endl;
+        char hand[] = "hand";
+        if (strCompare(command, hand) == 0) {
+            sortHand(p);
+            printHand(p);
+            std::cout << std::endl;
+            continue;
+        }
+
+        char play[] = "play ";
+        if (startsWith(command, play) && strLen(command) == strLen(play) + 1) {
+            int lastIndex = strLen(command) - 1;
+            int index = charToNum(command[lastIndex]);
+            if (index > p.handSize - 1) {
+                std::cout << "Invalid command or index." << std::endl;
+                continue;
+            }
+            Card c = playCard(p, talon, index);
+            std::cout << "Player P" << p.name << " played ";
+            printCard(c);
+            std::cout << std::endl;
+            return &c;
+        }
+        else {
+            std::cout << "Invalid command or index." << std::endl;
+            continue;
+        }
     }
 }
 
@@ -424,10 +432,15 @@ void gameStart(const Settings settings) {
 
     const Card TRUMP_CARD = pickTrumpSuit(talon);
 
-    Player inPlay = p1;
+    Player inPlay;
 
     while (true) {
-        playerCommand(settings, inPlay, talon);
+        inPlay = p1;
+        Card* c1ptr = playerCommand(settings, inPlay, talon);
+        if (c1ptr != nullptr) {
+            inPlay = p2;
+            Card* c2ptr = playerCommand(settings, inPlay, talon);
+        }
     }
 }
 
