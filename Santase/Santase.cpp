@@ -4,7 +4,7 @@
 #include <windows.h>;
 #include "strUtils.h"
 
-const int PLAYER_HAND = 6;
+const int HAND_SIZE = 6;
 const int TALON_SIZE = 24;
 const int COMMAND_MAX_SIZE = 50;
 const size_t MAX_STR_LEN = 1024;
@@ -15,7 +15,7 @@ struct Card {
 };
 
 struct Player {
-    Card* hand = new Card[PLAYER_HAND];
+    Card* hand = new Card[HAND_SIZE];
     int points = 0;
 };
 
@@ -37,42 +37,25 @@ Card drawCard(Talon& talon) {
     return c;
 }
 
-bool isUniqueCard(const Card c, const Talon talon) {
-    for (int i = 0; i<TALON_SIZE; i++) {
-        if ((c.suit == talon.talon[i].suit) && (c.value == talon.talon[i].value)) {
-            return false;
+void sortHand(Player& p) {
+    for (int i = 0; i < HAND_SIZE - 1; i++) {
+        for (int j = 0; j < HAND_SIZE - i - 1; j++) {
+            if (p.hand[j].value < p.hand[j + 1].value) {
+                Card c = p.hand[j + 1];
+                p.hand[j + 1] = p.hand[j];
+                p.hand[j] = c;
+            }
         }
     }
-    return true;
-}
-
-void initTalon(Talon& talon) {
-    for (int i = 0; i < TALON_SIZE; i++) {
-        Card c;
-        c.suit = (rand() % 4) + 1;
-        c.value = (rand() % 6) + 1;
-        
-        while (!isUniqueCard(c, talon)) {
-            c.suit = (rand() % 4) + 1;
-            c.value = (rand() % 6) + 1;
+    for (int i = 0; i < HAND_SIZE - 1; i++) {
+        for (int j = 0; j < HAND_SIZE - i - 1; j++) {
+            if (p.hand[j].suit > p.hand[j + 1].suit) {
+                Card c = p.hand[j + 1];
+                p.hand[j + 1] = p.hand[j];
+                p.hand[j] = c;
+            }
         }
-        talon.talon[i] = c;
     }
-    return;
-}
-
-void deal(Player& p1, Player& p2, Talon& talon) {
-    for (int i = 0; i < PLAYER_HAND; i++) {
-        p1.hand[i] = drawCard(talon);
-        p2.hand[i] = drawCard(talon);
-    }
-}
-
-Card pickTrumpSuit(Talon& talon) {
-    Card c = drawCard(talon);
-    talon.talon[(TALON_SIZE - 2 * PLAYER_HAND) - 1] = c;
-
-    return c;
 }
 
 enum class Color
@@ -155,13 +138,63 @@ void printCard(const Card c) {
         break;
     }
     case 6: {
-        std::cout <<'A';
+        std::cout << 'A';
         printSuit(c);
         break;
     }
     }
-    
+
     return;
+}
+
+void printHand(const Player p) {
+    std::cout << "[ ";
+    for (int i = 0; i < HAND_SIZE; i++) {
+        printCard(p.hand[i]);
+        std::cout << " ";
+    }
+    std::cout << ']';
+}
+
+bool isUniqueCard(const Card c, const Talon talon) {
+    for (int i = 0; i<TALON_SIZE; i++) {
+        if ((c.suit == talon.talon[i].suit) && (c.value == talon.talon[i].value)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void initTalon(Talon& talon) {
+    for (int i = 0; i < TALON_SIZE; i++) {
+        Card c;
+        c.suit = (rand() % 4) + 1;
+        c.value = (rand() % 6) + 1;
+        
+        while (!isUniqueCard(c, talon)) {
+            c.suit = (rand() % 4) + 1;
+            c.value = (rand() % 6) + 1;
+        }
+        talon.talon[i] = c;
+    }
+    return;
+}
+
+void deal(Player& p1, Player& p2, Talon& talon) {
+    for (int i = 0; i < HAND_SIZE; i++) {
+        p1.hand[i] = drawCard(talon);
+        p2.hand[i] = drawCard(talon);
+    }
+
+    sortHand(p1);
+    sortHand(p2);
+}
+
+Card pickTrumpSuit(Talon& talon) {
+    Card c = drawCard(talon);
+    talon.talon[(TALON_SIZE - 2 * HAND_SIZE) - 1] = c;
+
+    return c;
 }
 
 int getPointsToWin(const Settings settings) {
@@ -337,27 +370,6 @@ void changeSettings(Settings settings) {
     }
 }
 
-void sortHand(Player& p) {
-    for (int i = 0; i < PLAYER_HAND - 1; i++) {
-        for (int j = 0; j < PLAYER_HAND - i - 1; j++) {
-            if (p.hand[j].value < p.hand[j + 1].value) {
-                Card c = p.hand[j + 1];
-                p.hand[j + 1] = p.hand[j];
-                p.hand[j] = c;
-            }
-        }
-    }
-    for (int i = 0; i < PLAYER_HAND - 1; i++) {
-        for (int j = 0; j < PLAYER_HAND - i - 1; j++) {
-            if (p.hand[j].suit > p.hand[j + 1].suit) {
-                Card c = p.hand[j + 1];
-                p.hand[j + 1] = p.hand[j];
-                p.hand[j] = c;
-            }
-        }
-    }
-}
-
 void gameStart(Settings settings) {
     Player p1, p2;
     Talon talon;
@@ -366,6 +378,10 @@ void gameStart(Settings settings) {
     deal(p1, p2, talon);    
 
     const Card TRUMP_CARD = pickTrumpSuit(talon);
+
+    printHand(p1);
+    std::cout << "\n";
+    printHand(p2);
 }
 
 void printRules(const Settings settings) {
@@ -417,7 +433,10 @@ void commandIn(Settings settings) {
         if (strCompare(command, start) == 0) {
             gameStart(settings);
         }
-
+        else {
+            std::cout << "\n\nInput command: ";
+            std::cin >> command;
+        }
         char settingsStr[] = "settings";
         if (strCompare(command, settingsStr) == 0) {
             changeSettings(settings);
@@ -430,10 +449,6 @@ void commandIn(Settings settings) {
 
         if (strCompare(command, rules) != 0 && strCompare(command, settingsStr) != 0 && strCompare(command, start) != 0) {
             std::cout << "Invalid command. Try again: ";
-            std::cin >> command;
-        }
-        else {
-            std::cout << "\n\nInput command: ";
             std::cin >> command;
         }
     } while (strCompare(command, start) != 0);
