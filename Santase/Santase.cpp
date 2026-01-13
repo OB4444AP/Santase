@@ -42,7 +42,8 @@ struct Settings {
 Card drawCard(Talon& talon) {
     Card c = *(talon.talon);
     talon.talon++;
-    talon.talonSize--;
+    if(talon.talonSize > 0)
+        talon.talonSize--;
     return c;
 }
 
@@ -64,6 +65,21 @@ void sortHand(Player& p) {
                 p.hand[j] = c;
             }
         }
+    }
+}
+
+int getSuitVal(const char suit) {
+    switch (suit) {
+    case 'S':return 1;
+        break;
+    case 'H':return 2;
+        break;
+    case 'D':return 3;
+        break;
+    case 'C':return 4;
+        break;
+    default:return -1;
+        break;
     }
 }
 
@@ -165,7 +181,11 @@ void printCard(const Card c) {
     return;
 }
 
-Card playCard(Player& p, Talon& talon, int index) {
+bool isKingOrQueenOfSuit(const Player& p, const int index, const int suit) {
+    return p.hand[index].suit == suit && (p.hand[index].value == 4 || p.hand[index].value == 5);
+}
+
+Card playCard(Player& p, Talon& talon, const int index) {
     Card c = p.hand[index];
 
     for (int i = index; i < p.handSize - 1; i++) {
@@ -475,8 +495,54 @@ bool switchNine(Player& p, Talon& talon) {
     return false;
 }
 
+int marriageF(Player& p, const char suit, Talon& talon, Settings settings) {
+    if (p.name != talon.lastTrickWinner.name || p.tricksWon < 1) {
+        return 0;
+    }
+    int suitVal = getSuitVal(suit);
+
+    int kingInd = -1, queenInd = -1;
+
+    for (int i = 0; i < p.handSize; i++) {
+        if (p.hand[i].suit == suitVal && p.hand[i].value == 5) {
+            kingInd = i;
+        }
+        if (p.hand[i].suit == suitVal && p.hand[i].value == 4) {
+            queenInd = i;
+        }
+    }
+
+    if (kingInd != -1 && queenInd != -1) {
+        std::cout << std::endl << "Marriage declared: ";
+        printCard(p.hand[kingInd]);
+        std::cout << " + ";
+        printCard(p.hand[queenInd]);
+    }
+
+    if (suitVal == talon.trumpCard.value) {
+        std::cout << " (trump suit)" << std::endl << "You earned " << settings.marriagePoints_trump << " points." << std::endl;
+        p.points += settings.marriagePoints_trump;
+        std::cout << "You must play ";
+        printCard(p.hand[kingInd]);
+        std::cout << " or ";
+        printCard(p.hand[queenInd]);
+        std::cout << std::endl;
+    }
+    else {
+        std::cout << std::endl << "You earned " << settings.marriagePoints_nonTrump << " points." << std::endl;
+        p.points += settings.marriagePoints_nonTrump;
+        std::cout << "You must play ";
+        printCard(p.hand[kingInd]);
+        std::cout << " or ";
+        printCard(p.hand[queenInd]);
+        std::cout << std::endl;
+    }
+    return suitVal;
+}
+
 Player playerCommand(const Settings settings, Player& p, Talon& talon) {
     char command[COMMAND_MAX_SIZE];
+    int marriageSuit = 0;
 
     while (true) {
         printTurnMessage(p, talon);
@@ -500,6 +566,11 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
             if (!correctCardIndex(p, index)) {
                 continue;
             }
+            if (marriageSuit != 0 && !isKingOrQueenOfSuit(p, index, marriageSuit)) {
+                std::cout << std::endl << "Play the King or Queen of the chosen suit." << std::endl;
+                continue;
+            }
+            
             p.cardPlayed = playCard(p, talon, index);
             return p;
         }
@@ -511,7 +582,16 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
             }
         }
 
-
+        char marriage[] = "marriage ";
+        if (startsWith(command, marriage) && strLen(command) == strLen(marriage) + 1) {
+            int lastIndex = strLen(command) - 1;
+            char suit = command[lastIndex];
+            marriageSuit = marriageF(p, suit, talon, settings);
+            if (!marriageSuit) {
+                std::cout << std::endl << "Cannot declare marriage." << std::endl;
+            }
+            
+        }
         else {
             std::cout << "Invalid command or index." << std::endl;
             continue;
@@ -533,11 +613,12 @@ void gameStart(const Settings settings) {
     Player inPlay = playerCommand(settings, p1, talon);
     Player outOfPlay = playerCommand(settings, p2, talon);
 
-    while (true) {
+    while (inPlay.handSize > 0 || outOfPlay.handSize > 0) {
         Player trick_winner = trickWinner(settings, inPlay, outOfPlay, talon);
-        outOfPlay = inPlay;
-        inPlay = trick_winner;
-
+        if (trick_winner.name != inPlay.name) {
+            outOfPlay = inPlay;
+            inPlay = trick_winner;
+        }
         inPlay = playerCommand(settings, inPlay, talon);
         outOfPlay = playerCommand(settings, outOfPlay, talon);
 
