@@ -17,11 +17,16 @@ struct Player {
     int points = 0;
     int handSize = 6;
     Card* hand = new Card[handSize];
+    Card cardPlayed;
+    bool hasSurrendered = false;
+    bool hasEnded = false;
 };
 
 struct Talon {
     int talonSize = 24;
     Card* talon = new Card[talonSize];
+    Card trumpCard;
+    bool isClosed = false;
 };
 
 struct Settings {
@@ -177,6 +182,33 @@ Card playCard(Player& p, Talon& talon, int index) {
     return c;
 }
 
+int compareCards(const Card c1, const Card c2, const Talon talon) {
+    if (c1.suit == talon.trumpCard.suit && c2.suit != talon.trumpCard.suit) {
+        return -1;
+    }
+    if (c2.suit == talon.trumpCard.suit && c1.suit != talon.trumpCard.suit) {
+        return 1;
+    }
+    if (c1.suit != c2.suit) {
+        return -1;
+    }
+    if (c1.value > c2.value) {
+        return -1;
+    }
+    return 1;
+}
+
+Player trickWinner(const Settings settings, Player& p1, Player& p2, Talon& talon) {
+    if (compareCards(p1.cardPlayed, p2.cardPlayed, talon) == -1) {
+        std::cout << "P" << p1.name << " won the trick!" << std::endl;
+
+        return p1;
+    }
+    std::cout << "P" << p2.name << " won the trick!" << std::endl;
+
+    return p2;
+}
+
 void printHand(const Player p) {
     std::cout << "[ ";
     for (int i = 0; i < p.handSize; i++) {
@@ -184,6 +216,17 @@ void printHand(const Player p) {
         std::cout << " ";
     }
     std::cout << ']';
+}
+
+void printTurnMessage(const Player p, const Talon talon) {
+    std::cout << "P" << p.name << "'s turn:" << std::endl;
+    std::cout << "Hand: ";
+    printHand(p);
+    std::cout << std::endl << "Trump suit: ";
+    printSuit(talon.trumpCard);
+    std::cout << std::endl << "Bottom card: ";
+    printCard(talon.trumpCard);
+    std::cout << std::endl << "Cards left in deck: " << talon.talonSize << std::endl;
 }
 
 bool isUniqueCard(const Card c, const Talon talon) {
@@ -222,6 +265,7 @@ void deal(Player& p1, Player& p2, Talon& talon) {
 
 Card pickTrumpSuit(Talon& talon) {
     Card c = drawCard(talon);
+    talon.talonSize++;
     talon.talon[talon.talonSize - 1] = c;
 
     return c;
@@ -400,17 +444,22 @@ void changeSettings(Settings settings) {
     }
 }
 
-Card* playerCommand(const Settings settings, Player p, Talon talon) {
+Player playerCommand(const Settings settings, Player& p1, Player& p2, Talon& talon) {
     char command[COMMAND_MAX_SIZE];
 
+    Player inPlay = p1;
+    Player outOfPlay = p2;
+
     while (true) {
+        printTurnMessage(inPlay, talon);
+
         std::cout << "> ";
         std::cin.getline(command, COMMAND_MAX_SIZE - 1);
 
         char hand[] = "hand";
         if (strCompare(command, hand) == 0) {
-            sortHand(p);
-            printHand(p);
+            sortHand(inPlay);
+            printHand(inPlay);
             std::cout << std::endl;
             continue;
         }
@@ -419,12 +468,15 @@ Card* playerCommand(const Settings settings, Player p, Talon talon) {
         if (startsWith(command, play) && strLen(command) == strLen(play) + 1) {
             int lastIndex = strLen(command) - 1;
             int index = charToNum(command[lastIndex]);
-            if (!correctCardIndex(p, index)) {
+
+            if (!correctCardIndex(inPlay, index)) {
                 continue;
             }
-            Card c = playCard(p, talon, index);
-            return &c;
+            inPlay.cardPlayed = playCard(inPlay, talon, index);
+            return inPlay;
         }
+
+
         else {
             std::cout << "Invalid command or index." << std::endl;
             continue;
@@ -441,17 +493,19 @@ void gameStart(const Settings settings) {
     initTalon(talon);
     deal(p1, p2, talon);    
 
-    const Card TRUMP_CARD = pickTrumpSuit(talon);
+    talon.trumpCard = pickTrumpSuit(talon);
 
-    Player inPlay;
+    
+    Player inPlay = playerCommand(settings, p1, p2, talon);
+    Player outOfPlay = playerCommand(settings, p2, p1, talon);
 
     while (true) {
-        inPlay = p1;
-        Card* c1ptr = playerCommand(settings, inPlay, talon);
-        if (c1ptr != nullptr) {
-            inPlay = p2;
-            Card* c2ptr = playerCommand(settings, inPlay, talon);
-        }
+        Player trick_winner = trickWinner(settings, inPlay, outOfPlay, talon);
+        outOfPlay = inPlay;
+        inPlay = trick_winner;
+
+        inPlay = playerCommand(settings, inPlay, outOfPlay, talon);
+        outOfPlay = playerCommand(settings, inPlay, outOfPlay, talon);
     }
 }
 
