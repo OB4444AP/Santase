@@ -60,6 +60,15 @@ void sortHand(Player& p) {
     }
 }
 
+bool correctCardIndex(const Player p, const int index) {
+    if (index > p.handSize - 1) {
+        std::cout << "Invalid command or index." << std::endl;
+        return false;
+    }
+
+    return true;
+}
+
 enum class Color
 {
     Black = 0,
@@ -159,6 +168,12 @@ Card playCard(Player& p, Talon& talon, int index) {
     }
 
     p.hand[p.handSize - 1] = drawCard(talon);
+
+    std::cout << std::endl;
+    std::cout << "P" << p.name << " played ";
+    printCard(c);
+    std::cout << std::endl;
+
     return c;
 }
 
@@ -404,14 +419,10 @@ Card* playerCommand(const Settings settings, Player p, Talon talon) {
         if (startsWith(command, play) && strLen(command) == strLen(play) + 1) {
             int lastIndex = strLen(command) - 1;
             int index = charToNum(command[lastIndex]);
-            if (index > p.handSize - 1) {
-                std::cout << "Invalid command or index." << std::endl;
+            if (!correctCardIndex(p, index)) {
                 continue;
             }
             Card c = playCard(p, talon, index);
-            std::cout << "Player P" << p.name << " played ";
-            printCard(c);
-            std::cout << std::endl;
             return &c;
         }
         else {
