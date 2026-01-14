@@ -579,6 +579,12 @@ void printLastTrick(const Player p1, const Player p2, const Talon talon) {
     std::cout << std::endl << "Winner: Player " << talon.lastTrickWinner.name << std::endl;
 }
 
+void printTrump(const Talon talon) {
+    std::cout << std::endl << "Trump suit: ";
+    printSuit(talon.trumpCard);
+    std::cout << std::endl;
+}
+
 Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
@@ -639,6 +645,11 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
         char lastTrick[] = "last-trick";
         if (strCompare(command, lastTrick) == 0) {
             printLastTrick(inPlay, outOfPlay, talon);
+        }
+
+        char trump[] = "trump";
+        if (strCompare(command, trump) == 0) {
+            printTrump(talon);
         }
 
         else {
