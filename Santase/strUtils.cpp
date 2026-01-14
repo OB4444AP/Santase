@@ -30,7 +30,7 @@ int strCompare(const char* str1, const char* str2) {
     return *str1 - *str2;
 }
 
-bool strIsNum(char* str) {
+bool strIsNum(const char* str) {
     if (str == nullptr) {
         std::cout << "nullptr error";
         return 0;
@@ -50,7 +50,7 @@ bool strIsNum(char* str) {
     return 1;
 }
 
-bool strIsPosNum(char* str) {
+bool strIsPosNum(const char* str) {
     if (str == nullptr) {
         std::cout << "nullptr error";
         return 0;
@@ -70,7 +70,19 @@ bool strIsPosNum(char* str) {
     return 1;
 }
 
-bool strIsZero(char* str) {
+bool charIsNum(const char c) {
+    return (c >= '0' && c <= '9');
+}
+
+int charToNum(const char c) {
+    if (!charIsNum(c)) {
+        return '\0';
+    }
+
+    return c - '0';
+}
+
+bool strIsZero(const char* str) {
     if (str == nullptr) {
         std::cout << "nullptr error";
         return 0;
@@ -79,7 +91,7 @@ bool strIsZero(char* str) {
     return (str[0] == '0' && str[1] == '\0');
 }
 
-bool strIsOne(char* str) {
+bool strIsOne(const char* str) {
     if (str == nullptr) {
         std::cout << "nullptr error";
         return 0;
@@ -88,7 +100,7 @@ bool strIsOne(char* str) {
     return (str[0] == '1' && str[1] == '\0');
 }
 
-int strToNum(char* str) {
+int strToNum(const char* str) {
     if (str == nullptr) {
         std::cout << "nullptr error";
         return 0;
@@ -119,4 +131,20 @@ int strToNum(char* str) {
         return num * (-1);
     }
     return num;
+}
+
+bool startsWith(const char* str, const char* prefix) {
+    if (str == nullptr || prefix == nullptr) {
+        return false;
+    }
+
+    while (*prefix != '\0') {
+        if (*str == '\0' || *str != *prefix) {
+            return false;
+        }
+        str++;
+        prefix++;
+    }
+
+    return true;
 }
