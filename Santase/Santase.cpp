@@ -25,6 +25,7 @@ struct Player {
     bool hasSurrendered = false;
     bool hasEnded = false;
     int tricksWon = 0;
+    int roundsWon = 0;
 };
 
 struct Round {
@@ -86,6 +87,7 @@ Player roundWinner(Player& p1, Player& p2) {
         else if (p2.trickPoints >= 33) {
             p1.gamePoints += 1;
         }
+        p1.roundsWon++;
         return p1;
     }
     if (p1.trickPoints < 66 && p1.hasEnded) {
@@ -95,6 +97,7 @@ Player roundWinner(Player& p1, Player& p2) {
         else if (p1.trickPoints > 0) {
             p2.gamePoints += 2;
         }
+        p2.roundsWon++;
         return p2;
     }
     if (p2.trickPoints >= 66 && p2.hasEnded) {
@@ -107,6 +110,7 @@ Player roundWinner(Player& p1, Player& p2) {
         else if (p1.trickPoints >= 33) {
             p2.gamePoints += 1;
         }
+        p2.roundsWon++;
         return p2;
     }
     if (p2.trickPoints < 66 && p2.hasEnded) {
@@ -116,14 +120,17 @@ Player roundWinner(Player& p1, Player& p2) {
         else if (p2.trickPoints > 0) {
             p1.gamePoints += 2;
         }
+        p1.roundsWon++;
         return p1;
     }
     if (p1.trickPoints > p2.trickPoints) {
         p1.gamePoints++;
+        p1.roundsWon++;
         return p1;
     }
     else {
         p2.gamePoints++;
+        p2.roundsWon++;
         return p2;
     }
 }
@@ -729,6 +736,16 @@ bool isMatched(const Player p, const Card c, const Talon talon) {
     else return true;
 }
 
+void printStatus(const Player p1, const Player p2, const Talon talon) {
+    std::cout << std::endl << "Player " << p1.name << " has won " << p1.roundsWon << " rounds." << std::endl;
+    std::cout << "Player " << p2.name << " has won " << p2.roundsWon << " rounds." << std::endl;
+    printTrump(talon);
+    std::cout << std::endl << "Cards remaining in talon: " << talon.talonSize << std::endl;
+    std::cout << std::endl << "Bottom card: ";
+    printCard(talon.trumpCard);
+    std::cout << std::endl << std::endl;
+}
+
 Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round* rounds, const int roundsPlayed) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
@@ -810,6 +827,11 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
             continue;
         }
 
+        const char status[] = "status";
+        if (strCompare(command, status) == 0) {
+            printStatus(inPlay, outOfPlay, talon);
+            continue;
+        }
         std::cout << std::endl << "Invalid command or index." << std::endl;
         continue;
     }
