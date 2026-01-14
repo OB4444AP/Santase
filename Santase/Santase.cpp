@@ -718,19 +718,23 @@ bool roundFinished(const Settings settings, const Player p1, const Player p2) {
 
 bool isMatched(const Player p, const Card c, const Talon talon) {
     bool hasTrump = false;
+    bool hasSuit = false;
 
-    for (int i = 0; i < p.handSize; i++) {
-        if (c.suit == p.hand[i].suit) {
-            return true;
-        }
-        if (p.hand[i].suit == talon.trumpCard.suit) {
-            hasTrump = true;
-        }
+    if (c.suit == p.cardPlayed.suit) {
+        return true;
     }
     if (c.suit == talon.trumpCard.suit) {
         return true;
     }
-    if (hasTrump) {
+    for (int i = 0; i < p.handSize; i++) {
+        if (p.hand[i].suit == talon.trumpCard.suit) {
+            hasTrump = true;
+        }
+        if (p.hand[i].suit == c.suit) {
+            hasSuit = true;
+        }
+    }
+    if (hasTrump || hasSuit) {
         return false;
     }
     else return true;
@@ -744,6 +748,10 @@ void printStatus(const Player p1, const Player p2, const Talon talon) {
     std::cout << std::endl << "Bottom card: ";
     printCard(talon.trumpCard);
     std::cout << std::endl << std::endl;
+}
+
+void stopsGame(Player& p) {
+    p.hasEnded = 1;
 }
 
 Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round* rounds, const int roundsPlayed) {
@@ -832,6 +840,12 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
             printStatus(inPlay, outOfPlay, talon);
             continue;
         }
+
+        const char stop[] = "stop";
+        if (strCompare(command, stop) == 0) {
+            stopsGame(inPlay);
+            return inPlay;
+        }
         std::cout << std::endl << "Invalid command or index." << std::endl;
         continue;
     }
@@ -880,7 +894,9 @@ void gameStart(const Settings settings) {
         std::cout << std::endl << "Round " << roundsPlayed << " started:" << std::endl;
         do {
             inPlay = playerCommand(settings, inPlay, outOfPlay, talon, rounds, roundsPlayed);
+            if (inPlay.hasEnded) break;
             outOfPlay = playerCommand(settings, outOfPlay, inPlay, talon, rounds, roundsPlayed);
+            if (outOfPlay.hasEnded) break;
 
             trick_winner = trickWinner(settings, inPlay, outOfPlay, talon);
 
@@ -893,6 +909,11 @@ void gameStart(const Settings settings) {
                 outOfPlay.hand[outOfPlay.handSize - 1] = drawCard(talon);
             }
         } while (!trickFinished(inPlay, outOfPlay));
+        if (inPlay.handSize == 0 && outOfPlay.handSize == 0) {
+            inPlay.trickPoints += settings.lastTrickBonus;
+        }
+        std::cout << std::endl << "Round " << roundsPlayed << " has ended!";
+
         Player round_winner = roundWinner(inPlay, outOfPlay);
         rounds[roundsPlayed - 1] = { round_winner, round_winner.gamePoints, inPlay, outOfPlay };
         rounds = increaseRounds(rounds, roundsPlayed);
