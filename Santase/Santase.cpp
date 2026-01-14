@@ -8,6 +8,7 @@ const int COMMAND_MAX_SIZE = 50;
 const size_t MAX_STR_LEN = 1024;
 const int MAX_HAND_SIZE = 6;
 const int MAX_TALON_SIZE = 24;
+const int LAST_TRICK_BONUS = 10;
 
 struct Card {
     int suit;// 1 - spades ; 2 - hearts ; 3 - diamonds ; 4 - clubs
@@ -23,6 +24,7 @@ struct Player {
     Card cardPlayed = { 0,0 };
     Card lastTrickCard = { 0,0 };
     bool hasSurrendered = false;
+    bool hasSurrenderedForever = false;
     bool hasEnded = false;
     int tricksWon = 0;
     int roundsWon = 0;
@@ -78,7 +80,7 @@ Player roundWinner(Player& p1, Player& p2) {
     }
 
     if (p1.trickPoints >= 66 && p1.hasEnded) {
-        if (p2.trickPoints == 0) {
+        if (p2.tricksWon == 0) {
             p1.gamePoints += 3;
         }
         else if (p2.trickPoints <= 32) {
@@ -91,7 +93,7 @@ Player roundWinner(Player& p1, Player& p2) {
         return p1;
     }
     if (p1.trickPoints < 66 && p1.hasEnded) {
-        if (p1.trickPoints == 0) {
+        if (p1.tricksWon == 0) {
             p2.gamePoints += 3;
         }
         else if (p1.trickPoints > 0) {
@@ -101,7 +103,7 @@ Player roundWinner(Player& p1, Player& p2) {
         return p2;
     }
     if (p2.trickPoints >= 66 && p2.hasEnded) {
-        if (p1.trickPoints == 0) {
+        if (p1.tricksWon == 0) {
             p2.gamePoints += 3;
         }
         else if (p1.trickPoints <= 32) {
@@ -114,7 +116,7 @@ Player roundWinner(Player& p1, Player& p2) {
         return p2;
     }
     if (p2.trickPoints < 66 && p2.hasEnded) {
-        if (p2.trickPoints == 0) {
+        if (p2.tricksWon == 0) {
             p1.gamePoints += 3;
         }
         else if (p2.trickPoints > 0) {
@@ -414,10 +416,12 @@ void deal(Player& p1, Player& p2, Talon& talon) {
 }
 
 Card pickTrumpSuit(Talon& talon) {
-    Card c = drawCard(talon);
-    talon.talonSize++;
-    talon.talon[talon.talonSize - 1] = c;
+    int topCardInd = MAX_TALON_SIZE - talon.talonSize;
+    int bottomCardInd = MAX_TALON_SIZE - 1;
 
+    Card c = talon.talon[topCardInd];
+    talon.talon[topCardInd] = talon.talon[bottomCardInd];
+    talon.talon[bottomCardInd] = c;
     return c;
 }
 
@@ -568,6 +572,7 @@ void changeSettings(Settings settings) {
 
     char c;
     std::cin >> c;
+    std::cin.ignore();
 
     while (c != '0') {
         switch (c) {
@@ -610,6 +615,8 @@ bool switchNine(Player& p, Talon& talon) {
 
             p.hand[i] = talon.trumpCard;
             talon.trumpCard = t;
+
+            talon.talon[MAX_TALON_SIZE - 1] = t;
             return true;
         }
     }
@@ -618,6 +625,7 @@ bool switchNine(Player& p, Talon& talon) {
 
 int marriageF(Player& p, const char suit, Talon& talon, Settings settings) {
     if (p.name != talon.lastTrickWinner.name || p.tricksWon < 1) {
+        std::cout << std::endl << "You must have at least 1 trick won and it must be your turn for declare a marriage." << std::endl;
         return 0;
     }
     int suitVal = getSuitVal(suit);
@@ -709,32 +717,39 @@ bool trickFinished(const Player p1, const Player p2) {
     return false;
 }
 
-bool roundFinished(const Settings settings, const Player p1, const Player p2) {
-    if (p1.gamePoints >= settings.pointsToWin || p2.gamePoints >= settings.pointsToWin || p1.hasSurrendered || p2.hasSurrendered) {
+bool gameFinished(const Settings settings, const Player p1, const Player p2) {
+    if (p1.gamePoints != p2.gamePoints && p1.gamePoints >= settings.pointsToWin || p2.gamePoints >= settings.pointsToWin) {
+        return true;
+    }
+    if (p1.hasSurrenderedForever || p2.hasSurrenderedForever) {
         return true;
     }
     return false;
 }
 
-bool isMatched(const Player p, const Card c, const Talon talon) {
+bool isMatched(const Player& p1, const Player& p2, const Card c, const Talon& talon) {
+    if (c.suit == p1.cardPlayed.suit) {
+        return true;
+    }
+
     bool hasTrump = false;
     bool hasSuit = false;
 
-    if (c.suit == p.cardPlayed.suit) {
-        return true;
+    for (int i = 0; i < p2.handSize; i++) {
+        if (p2.hand[i].suit == talon.trumpCard.suit) {
+            hasTrump = true;
+        }
+        if (p2.hand[i].suit == p1.cardPlayed.suit) {
+            hasSuit = true;
+        }
+    }
+    if (hasSuit) {
+        return false;
     }
     if (c.suit == talon.trumpCard.suit) {
         return true;
     }
-    for (int i = 0; i < p.handSize; i++) {
-        if (p.hand[i].suit == talon.trumpCard.suit) {
-            hasTrump = true;
-        }
-        if (p.hand[i].suit == c.suit) {
-            hasSuit = true;
-        }
-    }
-    if (hasTrump || hasSuit) {
+    if (hasTrump) {
         return false;
     }
     else return true;
@@ -750,8 +765,21 @@ void printStatus(const Player p1, const Player p2, const Talon talon) {
     std::cout << std::endl << std::endl;
 }
 
-void stopsGame(Player& p) {
+void stopsRound(Player& p) {
     p.hasEnded = 1;
+}
+
+void surrenders(Player& p1, Player& p2) {
+    p1.hasSurrendered = true;
+    p2.trickPoints = 66;
+
+    std::cout << std::endl << "Player " << p1.name << " has surrendered." << std::endl;
+}
+
+void surrendersForever(Player& p) {
+    p.hasSurrenderedForever = true;
+
+    std::cout << std::endl << "Player " << p.name << " has surrender forever.";
 }
 
 Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round* rounds, const int roundsPlayed) {
@@ -784,7 +812,7 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
                 std::cout << std::endl << "Play the King or Queen of the chosen suit." << std::endl;
                 continue;
             }
-            if ((talon.isClosed || talon.talonSize == 0) && talon.lastTrickWinner.name != inPlay.name && !isMatched(outOfPlay, getCard(inPlay, index), talon)) {
+            if ((talon.isClosed || talon.talonSize == 0) && talon.lastTrickWinner.name != inPlay.name && !isMatched(outOfPlay, inPlay, getCard(inPlay, index), talon)) {
                 std::cout << std::endl << "Must match suit or trick." << std::endl;
                 continue;
             }
@@ -843,15 +871,27 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
 
         const char stop[] = "stop";
         if (strCompare(command, stop) == 0) {
-            stopsGame(inPlay);
+            stopsRound(inPlay);
             return inPlay;
         }
+
+        const char surrender[] = "surrender";
+        if (strCompare(command, surrender) == 0) {
+            surrenders(inPlay, outOfPlay);
+            return inPlay;
+        }
+
+        const char surrenderForever[] = "surrender-forever";
+        if (strCompare(command, surrender) == 0) {
+            surrendersForever(inPlay);
+        }
+
         std::cout << std::endl << "Invalid command or index." << std::endl;
         continue;
     }
 }
 
-Round* increaseRounds(const Round* rounds, int& roundsPlayed) {
+Round* increaseRounds(Round* rounds, int& roundsPlayed) {
     roundsPlayed++;
     Round* result = new Round[roundsPlayed];
 
@@ -861,6 +901,43 @@ Round* increaseRounds(const Round* rounds, int& roundsPlayed) {
     delete[] rounds;
 
     return result;
+}
+
+void resetRound(Talon& talon, Player& p1, Player& p2) {
+    p1.handSize = MAX_HAND_SIZE;
+    p2.handSize = MAX_HAND_SIZE;
+
+    p1.trickPoints = 0;
+    p2.trickPoints = 0;
+
+    p1.tricksWon = 0;
+    p2.tricksWon = 0;
+    p1.hasSurrendered = false;
+    p2.hasSurrendered = false;
+    p1.hasEnded = false;
+    p2.hasEnded = false;
+    p1.cardPlayed = { 0, 0 };
+    p2.cardPlayed = { 0, 0 };
+    p1.lastTrickCard = { 0, 0 };
+    p2.lastTrickCard = { 0, 0 };
+
+    p1.hand = new Card[p1.handSize];
+    p2.hand = new Card[p2.handSize];
+
+    talon.talonSize = MAX_TALON_SIZE;
+    talon.talon = new Card[talon.talonSize];
+
+    initTalon(talon);
+    deal(p1, p2, talon);
+
+    talon.trumpCard = pickTrumpSuit(talon);
+}
+
+Player gameWinner(const Player p1, const Player p2) {
+    if (p1.gamePoints > p2.gamePoints) {
+        return p1;
+    }
+    return p2;
 }
 
 void gameStart(const Settings settings) {
@@ -874,29 +951,14 @@ void gameStart(const Settings settings) {
     Player trick_winner;
 
     do {
-        inPlay.handSize = MAX_HAND_SIZE;
-        outOfPlay.handSize = MAX_HAND_SIZE;
-
-        inPlay.trickPoints = 0;
-        outOfPlay.trickPoints = 0;
-
-        inPlay.hand = new Card[inPlay.handSize];
-        outOfPlay.hand = new Card[outOfPlay.handSize];
-
-        talon.talonSize = MAX_TALON_SIZE;
-        talon.talon = new Card[talon.talonSize];
-
-        initTalon(talon);
-        deal(inPlay, outOfPlay, talon);
-
-        talon.trumpCard = pickTrumpSuit(talon);
+        resetRound(talon, inPlay, outOfPlay);
 
         std::cout << std::endl << "Round " << roundsPlayed << " started:" << std::endl;
         do {
             inPlay = playerCommand(settings, inPlay, outOfPlay, talon, rounds, roundsPlayed);
-            if (inPlay.hasEnded) break;
+            if (inPlay.hasEnded || inPlay.hasSurrendered) break;
             outOfPlay = playerCommand(settings, outOfPlay, inPlay, talon, rounds, roundsPlayed);
-            if (outOfPlay.hasEnded) break;
+            if (outOfPlay.hasEnded || outOfPlay.hasSurrendered) break;
 
             trick_winner = trickWinner(settings, inPlay, outOfPlay, talon);
 
@@ -904,21 +966,37 @@ void gameStart(const Settings settings) {
                 outOfPlay = inPlay;
                 inPlay = trick_winner;
             }
-            if (!talonIsEmpty(talon)) {
+            if (!talonIsEmpty(talon) && !talon.isClosed) {
                 inPlay.hand[inPlay.handSize - 1] = drawCard(talon);
                 outOfPlay.hand[outOfPlay.handSize - 1] = drawCard(talon);
             }
         } while (!trickFinished(inPlay, outOfPlay));
-        if (inPlay.handSize == 0 && outOfPlay.handSize == 0) {
-            inPlay.trickPoints += settings.lastTrickBonus;
+        if (inPlay.handSize == 0 && outOfPlay.handSize == 0 && settings.lastTrickBonus) {
+            inPlay.trickPoints += LAST_TRICK_BONUS;
         }
         std::cout << std::endl << "Round " << roundsPlayed << " has ended!";
 
+        int inPlayPts = inPlay.gamePoints;
+        int outOfPlayPts = outOfPlay.gamePoints;
+
         Player round_winner = roundWinner(inPlay, outOfPlay);
-        rounds[roundsPlayed - 1] = { round_winner, round_winner.gamePoints, inPlay, outOfPlay };
+
+        int pointsEarned = 0;
+        if (round_winner.name == 0) {
+            std::cout << std::endl << "Round ended in a Tie! No points awarded." << std::endl;
+        }
+        if (round_winner.name == inPlay.name) {
+            pointsEarned = inPlay.gamePoints - inPlayPts;
+        }
+        else {
+            pointsEarned = outOfPlay.gamePoints - outOfPlayPts;
+        }
+        Round roundPlayed = { round_winner, pointsEarned, inPlay, outOfPlay };
+
+        rounds[roundsPlayed - 1] = roundPlayed;
         rounds = increaseRounds(rounds, roundsPlayed);
 
-        std::cout << std::endl << "Player " << round_winner.name << " has won the round with " << round_winner.trickPoints << " points!" << std::endl;
+        std::cout << std::endl << "Player " << round_winner.name << " has won the round and earned " << pointsEarned << " game points!" << std::endl;
 
         delete[] inPlay.hand;
         inPlay.hand = nullptr;
@@ -929,7 +1007,12 @@ void gameStart(const Settings settings) {
         delete[] talon.talon;
         talon.talon = nullptr;
 
-    } while (!roundFinished(settings, inPlay, outOfPlay));
+    } while (!gameFinished(settings, inPlay, outOfPlay));
+
+    Player game_winner = gameWinner(inPlay, outOfPlay);
+
+    std::cout << std::endl << "Game has ended." << std::endl;
+    std::cout << "Player " << game_winner.name << " wins!" << std::endl;
 }
 
 void printRules(const Settings settings) {
