@@ -39,11 +39,18 @@ struct Settings {
     bool lastTrickBonus = 1;
 };
 
+bool sameSuit(Card c1, Card c2) {
+    return c1.suit == c2.suit;
+}
+
+bool talonIsEmpty(Talon& talon) {
+    return talon.talonSize == 0;
+}
+
 Card drawCard(Talon& talon) {
     Card c = *(talon.talon);
     talon.talon++;
-    if(talon.talonSize > 0)
-        talon.talonSize--;
+    talon.talonSize--;
     return c;
 }
 
@@ -185,6 +192,10 @@ bool isKingOrQueenOfSuit(const Player& p, const int index, const int suit) {
     return p.hand[index].suit == suit && (p.hand[index].value == 4 || p.hand[index].value == 5);
 }
 
+Card getCard(const Player p, const int index) {
+    return p.hand[index];
+}
+
 Card playCard(Player& p, Talon& talon, const int index) {
     Card c = p.hand[index];
 
@@ -194,7 +205,10 @@ Card playCard(Player& p, Talon& talon, const int index) {
         p.hand[i + 1] = t;
     }
 
-    p.hand[p.handSize - 1] = drawCard(talon);
+    if (!talon.isClosed && !talonIsEmpty(talon)) {
+        p.hand[p.handSize - 1] = drawCard(talon);
+    }
+    else p.handSize--;
 
     std::cout << std::endl;
     std::cout << "P" << p.name << " played ";
@@ -540,6 +554,13 @@ int marriageF(Player& p, const char suit, Talon& talon, Settings settings) {
     return suitVal;
 }
 
+void closeTalon(Talon& talon) {
+    talon.isClosed = true;
+
+    std::cout << "Stock closed. No more cards will be drawn." << std::endl;
+    std::cout << "Strict rules are now in effect" << std::endl;
+}
+
 Player playerCommand(const Settings settings, Player& p, Talon& talon) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
@@ -570,7 +591,7 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
                 std::cout << std::endl << "Play the King or Queen of the chosen suit." << std::endl;
                 continue;
             }
-            
+
             p.cardPlayed = playCard(p, talon, index);
             return p;
         }
@@ -590,8 +611,15 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
             if (!marriageSuit) {
                 std::cout << std::endl << "Cannot declare marriage." << std::endl;
             }
-            
         }
+
+        char close[] = "close";
+        if (strCompare(command, close) == 0) {
+            closeTalon(talon);
+        }
+
+
+
         else {
             std::cout << "Invalid command or index." << std::endl;
             continue;
@@ -615,10 +643,12 @@ void gameStart(const Settings settings) {
 
     while (inPlay.handSize > 0 || outOfPlay.handSize > 0) {
         Player trick_winner = trickWinner(settings, inPlay, outOfPlay, talon);
+
         if (trick_winner.name != inPlay.name) {
             outOfPlay = inPlay;
             inPlay = trick_winner;
         }
+
         inPlay = playerCommand(settings, inPlay, talon);
         outOfPlay = playerCommand(settings, outOfPlay, talon);
 
