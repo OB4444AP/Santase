@@ -17,7 +17,8 @@ struct Player {
     int points = 0;
     int handSize = 6;
     Card* hand = new Card[handSize];
-    Card cardPlayed;
+    Card cardPlayed = { 0,0 };
+    Card lastTrickCard{ 0,0 };
     bool hasSurrendered = false;
     bool hasEnded = false;
     int tricksWon = 0;
@@ -243,12 +244,16 @@ Player trickWinner(const Settings settings, Player& p1, Player& p2, Talon& talon
 
         talon.lastTrickWinner = p1;
         p1.tricksWon++;
+        p1.lastTrickCard = p1.cardPlayed;
+        p2.lastTrickCard = p2.cardPlayed;
         return p1;
     }
     std::cout << "P" << p2.name << " won the trick!" << std::endl;
 
     talon.lastTrickWinner = p2;
     p2.tricksWon++;
+    p1.lastTrickCard = p1.cardPlayed;
+    p2.lastTrickCard = p2.cardPlayed;
     return p2;
 }
 
@@ -561,20 +566,33 @@ void closeTalon(Talon& talon) {
     std::cout << "Strict rules are now in effect" << std::endl;
 }
 
-Player playerCommand(const Settings settings, Player& p, Talon& talon) {
+void printLastTrick(const Player p1, const Player p2, const Talon talon) {
+    if (talon.lastTrickWinner.name == 0) {
+        std::cout << std::endl << "No trick played yet." << std::endl;
+        return;
+    }
+
+    std::cout << std::endl << "Player P" << p1.name << ": ";
+    printCard(p1.lastTrickCard);
+    std::cout << std::endl << "Player P" << p2.name << ": ";
+    printCard(p2.lastTrickCard);
+    std::cout << std::endl << "Winner: Player " << talon.lastTrickWinner.name << std::endl;
+}
+
+Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
 
     while (true) {
-        printTurnMessage(p, talon);
+        printTurnMessage(inPlay, talon);
 
         std::cout << "> ";
         std::cin.getline(command, COMMAND_MAX_SIZE - 1);
 
         char hand[] = "hand";
         if (strCompare(command, hand) == 0) {
-            sortHand(p);
-            printHand(p);
+            sortHand(inPlay);
+            printHand(inPlay);
             std::cout << std::endl;
             continue;
         }
@@ -584,21 +602,21 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
             int lastIndex = strLen(command) - 1;
             int index = charToNum(command[lastIndex]);
 
-            if (!correctCardIndex(p, index)) {
+            if (!correctCardIndex(inPlay, index)) {
                 continue;
             }
-            if (marriageSuit != 0 && !isKingOrQueenOfSuit(p, index, marriageSuit)) {
+            if (marriageSuit != 0 && !isKingOrQueenOfSuit(inPlay, index, marriageSuit)) {
                 std::cout << std::endl << "Play the King or Queen of the chosen suit." << std::endl;
                 continue;
             }
-
-            p.cardPlayed = playCard(p, talon, index);
-            return p;
+            
+            inPlay.cardPlayed = playCard(inPlay, talon, index);
+            return inPlay;
         }
 
         char switch9[] = "switch9";
         if (strCompare(command, switch9) == 0) {
-            if (!switchNine(p, talon) || talon.lastTrickWinner.name != p.name) {
+            if (!switchNine(inPlay, talon) || talon.lastTrickWinner.name != inPlay.name) {
                 std::cout << std::endl << "Cannot switch nine" << std::endl;
             }
         }
@@ -607,7 +625,7 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
         if (startsWith(command, marriage) && strLen(command) == strLen(marriage) + 1) {
             int lastIndex = strLen(command) - 1;
             char suit = command[lastIndex];
-            marriageSuit = marriageF(p, suit, talon, settings);
+            marriageSuit = marriageF(inPlay, suit, talon, settings);
             if (!marriageSuit) {
                 std::cout << std::endl << "Cannot declare marriage." << std::endl;
             }
@@ -618,10 +636,13 @@ Player playerCommand(const Settings settings, Player& p, Talon& talon) {
             closeTalon(talon);
         }
 
-
+        char lastTrick[] = "last-trick";
+        if (strCompare(command, lastTrick) == 0) {
+            printLastTrick(inPlay, outOfPlay, talon);
+        }
 
         else {
-            std::cout << "Invalid command or index." << std::endl;
+            std::cout << std::endl << "Invalid command or index." << std::endl;
             continue;
         }
     }
@@ -638,8 +659,8 @@ void gameStart(const Settings settings) {
 
     talon.trumpCard = pickTrumpSuit(talon);
     
-    Player inPlay = playerCommand(settings, p1, talon);
-    Player outOfPlay = playerCommand(settings, p2, talon);
+    Player inPlay = playerCommand(settings, p1, p2, talon);
+    Player outOfPlay = playerCommand(settings, p2, p1, talon);
 
     while (inPlay.handSize > 0 || outOfPlay.handSize > 0) {
         Player trick_winner = trickWinner(settings, inPlay, outOfPlay, talon);
@@ -649,8 +670,8 @@ void gameStart(const Settings settings) {
             inPlay = trick_winner;
         }
 
-        inPlay = playerCommand(settings, inPlay, talon);
-        outOfPlay = playerCommand(settings, outOfPlay, talon);
+        inPlay = playerCommand(settings, inPlay, outOfPlay, talon);
+        outOfPlay = playerCommand(settings, outOfPlay, inPlay, talon);
 
     }
 }
