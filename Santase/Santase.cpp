@@ -709,6 +709,26 @@ bool roundFinished(const Settings settings, const Player p1, const Player p2) {
     return false;
 }
 
+bool isMatched(const Player p, const Card c, const Talon talon) {
+    bool hasTrump = false;
+
+    for (int i = 0; i < p.handSize; i++) {
+        if (c.suit == p.hand[i].suit) {
+            return true;
+        }
+        if (p.hand[i].suit == talon.trumpCard.suit) {
+            hasTrump = true;
+        }
+    }
+    if (c.suit == talon.trumpCard.suit) {
+        return true;
+    }
+    if (hasTrump) {
+        return false;
+    }
+    else return true;
+}
+
 Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round* rounds, const int roundsPlayed) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
@@ -739,7 +759,10 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
                 std::cout << std::endl << "Play the King or Queen of the chosen suit." << std::endl;
                 continue;
             }
-            
+            if ((talon.isClosed || talon.talonSize == 0) && talon.lastTrickWinner.name != inPlay.name && !isMatched(outOfPlay, getCard(inPlay, index), talon)) {
+                std::cout << std::endl << "Must match suit or trick." << std::endl;
+                continue;
+            }
             inPlay.cardPlayed = playCard(inPlay, talon, index);
             return inPlay;
         }
