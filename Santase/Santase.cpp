@@ -2,7 +2,7 @@
 #include <fstream>
 #include <cstdlib>
 #include <ctime>
-#include <windows.h>;
+#include <windows.h>
 #include "strUtils.h"
 #include "Structs.h"
 #include "saveLoad.h"
