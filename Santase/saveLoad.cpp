@@ -1,8 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "saveLoad.h"
-#include "strUtils.cpp"
-#include "Santase.cpp"
+#include "strUtils.h"
 
 void saveCard(std::ofstream& file, const Card& c) {
     file << c.suit << " " << c.value << "\n";
@@ -111,7 +110,7 @@ void saveGame(const char* filename, const Player& p1, const Player& p2, const Ta
     savePlayer(file, p2);
 
     file << roundsPlayed << "\n";
-    for (int i = 0; i < roundsPlayed - i; i++) {
+    for (int i = 0; i < roundsPlayed - 1; i++) {
         file << rounds[i].pointsWon << "\n";
         file << rounds[i].winner.name << " "
             << rounds[i].p1.name << " " << rounds[i].p1.trickPoints << " "

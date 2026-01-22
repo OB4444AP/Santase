@@ -4,55 +4,12 @@
 #include <ctime>
 #include <windows.h>;
 #include "strUtils.h"
+#include "Structs.h"
+#include "saveLoad.h"
 
 const int COMMAND_MAX_SIZE = 50;
 const size_t MAX_STR_LEN = 1024;
-const int MAX_HAND_SIZE = 6;
-const int MAX_TALON_SIZE = 24;
 const int LAST_TRICK_BONUS = 10;
-
-struct Card {
-    int suit;// 1 - spades ; 2 - hearts ; 3 - diamonds ; 4 - clubs
-    int value;
-};
-
-struct Player {
-    int name = 0;
-    int trickPoints = 0;
-    int gamePoints = 0;
-    int handSize = MAX_HAND_SIZE;
-    Card* hand = nullptr;
-    Card cardPlayed = { 0,0 };
-    Card lastTrickCard = { 0,0 };
-    bool hasSurrendered = false;
-    bool hasSurrenderedForever = false;
-    bool hasEnded = false;
-    int tricksWon = 0;
-    int roundsWon = 0;
-};
-
-struct Round {
-    Player winner;
-    int pointsWon = 0;
-    Player p1;
-    Player p2;
-};
-
-struct Talon {
-    int talonSize = MAX_TALON_SIZE;
-    Card* talon = nullptr;
-    Card trumpCard;
-    bool isClosed = false;
-    Player lastTrickWinner;
-};
-
-struct Settings {
-    int pointsToWin = 11;
-    int marriagePoints_nonTrump = 20;
-    int marriagePoints_trump = 40;
-    bool showPlayerPoints = 0;
-    bool lastTrickBonus = 1;
-};
 
 int getCardPoints(Card c) {
     switch (c.value) {
@@ -783,7 +740,7 @@ void surrendersForever(Player& p) {
     std::cout << std::endl << "Player " << p.name << " has surrender forever.";
 }
 
-Player playerCommand(const Settings& settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round*& rounds, const int& roundsPlayed) {
+Player playerCommand(Settings& settings, Player& inPlay, Player& outOfPlay, Talon& talon, Round*& rounds, int& roundsPlayed) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
 
@@ -887,6 +844,20 @@ Player playerCommand(const Settings& settings, Player& inPlay, Player& outOfPlay
             surrendersForever(inPlay);
         }
 
+        const char save[] = "save ";
+        if (startsWith(command, save)) {
+            const char* filename = command + strLen(save);
+            saveGame(filename, inPlay, outOfPlay, talon, settings, rounds, roundsPlayed);
+            continue;
+        }
+        const char load[] = "load ";
+        if (startsWith(command, load)) {
+            const char* filename = command + strLen(load);
+            if (loadGame(filename, inPlay, outOfPlay, talon, settings, rounds, roundsPlayed)) {
+            }
+            continue;
+        }
+
         std::cout << std::endl << "Invalid command or index." << std::endl;
         continue;
     }
@@ -941,7 +912,7 @@ Player gameWinner(const Player p1, const Player p2) {
     return p2;
 }
 
-void gameStart(const Settings settings) {
+void gameStart(Settings settings) {
     Player inPlay, outOfPlay;
     inPlay.name = 1;
     outOfPlay.name = 2;
