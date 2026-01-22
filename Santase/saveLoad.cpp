@@ -48,3 +48,33 @@ void loadPlayer(std::ifstream& file, Player& p) {
         loadCard(file, p.hand[i]);
     }
 }
+
+void saveTalon(std::ofstream& file, const Talon& talon) {
+    file << talon.talonSize << " " << talon.isClosed << "\n";
+
+    saveCard(file, talon.trumpCard);
+
+    file << talon.lastTrickWinner.name << "\n";
+
+    for (int i = 0; i < talon.talonSize; i++) {
+        saveCard(file, talon.talon[i]);
+    }
+}
+
+void loadTalon(std::ifstream& file, Talon& talon) {
+    file >> talon.talonSize >> talon.isClosed;
+    loadCard(file, talon.trumpCard);
+
+    int lastWinnerName;
+    file >> lastWinnerName;
+    talon.lastTrickWinner.name = lastWinnerName;
+
+    if (talon.talon != nullptr) {
+        delete[] talon.talon;
+    }
+    talon.talon = new Card[MAX_TALON_SIZE];
+
+    for (int i = 0; i < talon.talonSize; i++) {
+        loadCard(file, talon.talon[i]);
+    }
+}
