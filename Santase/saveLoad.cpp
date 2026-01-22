@@ -90,3 +90,75 @@ void loadSettings(std::ifstream& file, Settings& s) {
         >> s.marriagePoints_trump >> s.showPlayerPoints
         >> s.lastTrickBonus;
 }
+
+void saveGame(const char* filename, const Player& p1, const Player& p2, const Talon& talon, const Settings& settings, const Round* rounds, int roundsPlayed) {
+    char fullFilename[100];
+    fullFilename[0] = '\0';
+
+    strAppend(fullFilename, filename);
+    strAppend(fullFilename, ".txt");
+
+    std::ofstream file(fullFilename);
+
+    if (!file.is_open()) {
+        std::cout << "error";
+        return;
+    }
+
+    saveSettings(file, settings);
+    saveTalon(file, talon);
+    savePlayer(file, p1);
+    savePlayer(file, p2);
+
+    file << roundsPlayed << "\n";
+    for (int i = 0; i < roundsPlayed - i; i++) {
+        file << rounds[i].pointsWon << "\n";
+        file << rounds[i].winner.name << " "
+            << rounds[i].p1.name << " " << rounds[i].p1.trickPoints << " "
+            << rounds[i].p2.name << " " << rounds[i].p2.trickPoints << "\n";
+    }
+
+    file.close();
+    std::cout << "Game saved successfully as '" << fullFilename << "'." << std::endl;
+}
+
+bool loadGame(const char* filename, Player& p1, Player& p2, Talon& talon, Settings& settings, Round*& rounds, int& roundsPlayed) {
+    char fullFilename[100];
+    fullFilename[0] = '\0';
+
+    strAppend(fullFilename, filename);
+    strAppend(fullFilename, ".txt");
+
+    std::ifstream file(fullFilename);
+
+    if (!file.is_open()) {
+        std::cout << "file not found " << fullFilename << std::endl;
+        return false;
+    }
+
+    loadSettings(file, settings);
+    loadTalon(file, talon);
+    loadPlayer(file, p1);
+    loadPlayer(file, p2);
+
+    file >> roundsPlayed;
+
+    if (rounds != nullptr) delete[] rounds;
+
+    rounds = new Round[roundsPlayed];
+
+    for (int i = 0; i < roundsPlayed - 1; i++) {
+        file >> rounds[i].pointsWon;
+        file >> rounds[i].winner.name
+            >> rounds[i].p1.name >> rounds[i].p1.trickPoints
+            >> rounds[i].p2.name >> rounds[i].p2.trickPoints;
+
+        rounds[i].winner.hand = nullptr;
+        rounds[i].p1.hand = nullptr;
+        rounds[i].p2.hand = nullptr;
+    }
+
+    file.close();
+    std::cout << "Game loaded successfully from '" << fullFilename << "'." << std::endl;
+    return true;
+}
