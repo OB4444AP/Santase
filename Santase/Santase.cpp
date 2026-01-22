@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <ctime>
 #include <windows.h>;
@@ -782,7 +783,7 @@ void surrendersForever(Player& p) {
     std::cout << std::endl << "Player " << p.name << " has surrender forever.";
 }
 
-Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round* rounds, const int roundsPlayed) {
+Player playerCommand(const Settings& settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round*& rounds, const int& roundsPlayed) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
 
