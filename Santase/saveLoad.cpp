@@ -55,7 +55,7 @@ void saveTalon(std::ofstream& file, const Talon& talon) {
 
     file << talon.lastTrickWinner.name << "\n";
 
-    for (int i = 0; i < talon.talonSize; i++) {
+    for (int i = 0; i < MAX_TALON_SIZE; i++) {
         saveCard(file, talon.talon[i]);
     }
 }
@@ -73,7 +73,7 @@ void loadTalon(std::ifstream& file, Talon& talon) {
     }
     talon.talon = new Card[MAX_TALON_SIZE];
 
-    for (int i = 0; i < talon.talonSize; i++) {
+    for (int i = 0; i < MAX_TALON_SIZE; i++) {
         loadCard(file, talon.talon[i]);
     }
 }

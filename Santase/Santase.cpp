@@ -912,18 +912,16 @@ Player gameWinner(const Player p1, const Player p2) {
     return p2;
 }
 
-void gameStart(Settings settings) {
-    Player inPlay, outOfPlay;
-    inPlay.name = 1;
-    outOfPlay.name = 2;
-    Talon talon;
-
-    int roundsPlayed = 1;
-    Round* rounds = new Round[roundsPlayed];
+void gameLoop(Player& inPlay, Player& outOfPlay, Talon& talon, Round*& rounds, int& roundsPlayed, Settings& settings, bool isLoaded) {
     Player trick_winner;
 
     do {
-        resetRound(talon, inPlay, outOfPlay);
+        if (!isLoaded) {
+            resetRound(talon, inPlay, outOfPlay);
+        }
+        else {
+            isLoaded = false;
+        }
 
         std::cout << std::endl << "Round " << roundsPlayed << " started:" << std::endl;
         do {
@@ -943,6 +941,7 @@ void gameStart(Settings settings) {
                 outOfPlay.hand[outOfPlay.handSize - 1] = drawCard(talon);
             }
         } while (!trickFinished(inPlay, outOfPlay));
+
         if (inPlay.handSize == 0 && outOfPlay.handSize == 0 && settings.lastTrickBonus) {
             inPlay.trickPoints += LAST_TRICK_BONUS;
         }
@@ -957,7 +956,7 @@ void gameStart(Settings settings) {
         if (round_winner.name == 0) {
             std::cout << std::endl << "Round ended in a Tie! No points awarded." << std::endl;
         }
-        if (round_winner.name == inPlay.name) {
+        else if (round_winner.name == inPlay.name) {
             pointsEarned = inPlay.gamePoints - inPlayPts;
         }
         else {
@@ -972,10 +971,8 @@ void gameStart(Settings settings) {
 
         delete[] inPlay.hand;
         inPlay.hand = nullptr;
-
         delete[] outOfPlay.hand;
         outOfPlay.hand = nullptr;
-        
         delete[] talon.talon;
         talon.talon = nullptr;
 
@@ -985,6 +982,20 @@ void gameStart(Settings settings) {
 
     std::cout << std::endl << "Game has ended." << std::endl;
     std::cout << "Player " << game_winner.name << " wins!" << std::endl;
+
+    delete[] rounds;
+}
+
+void gameStart(Settings settings) {
+    Player inPlay, outOfPlay;
+    inPlay.name = 1;
+    outOfPlay.name = 2;
+    Talon talon;
+
+    int roundsPlayed = 1;
+    Round* rounds = new Round[roundsPlayed];
+
+    gameLoop(inPlay, outOfPlay, talon, rounds, roundsPlayed, settings, false);
 }
 
 void printRules(const Settings settings) {
@@ -1028,30 +1039,43 @@ void printRules(const Settings settings) {
 void commandIn(Settings settings) {
     char command[COMMAND_MAX_SIZE];
     const char start[] = "start";
+    const char load[] = "load ";
 
-    do {
+    while (true) {
         std::cout << "> ";
         std::cin.getline(command, COMMAND_MAX_SIZE - 1);
 
-        if (strCompare(command, start) == 0) {
+        if (strCompare(command, "start") == 0) {
             gameStart(settings);
         }
 
-        const char settingsStr[] = "settings";
-        if (strCompare(command, settingsStr) == 0) {
+        else if (startsWith(command, "load ")) {
+            const char* filename = command + strLen(load);
+
+            Player p1, p2;
+            Talon talon;
+            Round* rounds = nullptr;
+            int roundsPlayed = 0;
+
+            if (loadGame(filename, p1, p2, talon, settings, rounds, roundsPlayed)) {
+                gameLoop(p1, p2, talon, rounds, roundsPlayed, settings, true);
+                rounds = nullptr;
+            }
+        }
+
+        else if (strCompare(command, "settings") == 0) {
             changeSettings(settings);
         }
 
-        const char rules[] = "rules";
-        if (strCompare(command, rules) == 0) {
+        else if (strCompare(command, "rules") == 0) {
             printRules(settings);
             std::cout << std::endl;
         }
 
-        if (strCompare(command, rules) != 0 && strCompare(command, settingsStr) != 0 && strCompare(command, start) != 0) {
-            std::cout << "Invalid command. Try again: ";
+        else {
+            std::cout << "Invalid command. Try 'start', 'load <name>', 'settings', or 'rules'." << std::endl;
         }
-    } while (strCompare(command, start) != 0);
+    }
 }
 
 int main()
