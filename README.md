@@ -5,9 +5,8 @@ A C++ console-based implementation of the popular card game **Santase** (also kn
 ## 📋 Project Info
 * **Course:** Introduction to Programming (Practicum) 2025-2026
 * **Project:** #02 - Card Game "66" (Santase)
-* **Author:** [YOUR NAME HERE]
-* **Faculty Number:** [YOUR FN HERE]
-* **Compiler:** GCC / Visual C++
+* **Author:** OB4444AP
+* **Compiler:** Visual C++
 
 ## 🎮 Game Description
 Santase is a strategy card game for two players played with a deck of 24 cards (Ace, 10, King, Queen, Jack, 9). The goal is to be the first to reach **66 points** in a round to win game points. The first player to reach **11 game points** wins the entire match. You can type "rules" for explanation in detail.
