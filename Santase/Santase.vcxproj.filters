@@ -21,10 +21,16 @@
     <ClCompile Include="strUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="saveLoad.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="strUtils.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="saveLoad.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
