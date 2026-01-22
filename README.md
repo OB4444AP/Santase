@@ -10,7 +10,7 @@ A C++ console-based implementation of the popular card game **Santase** (also kn
 * **Compiler:** GCC / Visual C++
 
 ## 🎮 Game Description
-Santase is a strategy card game for two players played with a deck of 24 cards (Ace, 10, King, Queen, Jack, 9). The goal is to be the first to reach **66 points** in a round to win game points. The first player to reach **11 game points** wins the entire match.
+Santase is a strategy card game for two players played with a deck of 24 cards (Ace, 10, King, Queen, Jack, 9). The goal is to be the first to reach **66 points** in a round to win game points. The first player to reach **11 game points** wins the entire match. You can type "rules" for explanation in detail.
 
 ### Key Features
 * **Full Game Loop:** Play complete matches with automatic shuffling, dealing, and scoring.
