@@ -6,3 +6,5 @@ void savePlayer(std::ofstream& file, const Player& p);
 void loadPlayer(std::ifstream& file, Player& p);
 void saveTalon(std::ofstream& file, const Talon& talon);
 void loadTalon(std::ifstream& file, Talon& talon);
+void saveSettings(std::ofstream& file, const Settings& s);
+void loadSettings(std::ifstream& file, Settings& s);

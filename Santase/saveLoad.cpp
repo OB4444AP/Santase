@@ -78,3 +78,15 @@ void loadTalon(std::ifstream& file, Talon& talon) {
         loadCard(file, talon.talon[i]);
     }
 }
+
+void saveSettings(std::ofstream& file, const Settings& s) {
+    file << s.pointsToWin << " " << s.marriagePoints_nonTrump << " "
+        << s.marriagePoints_trump << " " << s.showPlayerPoints << " "
+        << s.lastTrickBonus << "\n";
+}
+
+void loadSettings(std::ifstream& file, Settings& s) {
+    file >> s.pointsToWin >> s.marriagePoints_nonTrump
+        >> s.marriagePoints_trump >> s.showPlayerPoints
+        >> s.lastTrickBonus;
+}
