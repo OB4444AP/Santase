@@ -124,9 +124,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Santase.cpp" />
+    <ClCompile Include="saveLoad.cpp" />
     <ClCompile Include="strUtils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="saveLoad.h" />
+    <ClInclude Include="Structs.h" />
     <ClInclude Include="strUtils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

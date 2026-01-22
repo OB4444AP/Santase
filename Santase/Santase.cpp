@@ -1,57 +1,15 @@
 #include <iostream>
+#include <fstream>
 #include <cstdlib>
 #include <ctime>
 #include <windows.h>;
 #include "strUtils.h"
+#include "Structs.h"
+#include "saveLoad.h"
 
 const int COMMAND_MAX_SIZE = 50;
 const size_t MAX_STR_LEN = 1024;
-const int MAX_HAND_SIZE = 6;
-const int MAX_TALON_SIZE = 24;
 const int LAST_TRICK_BONUS = 10;
-
-struct Card {
-    int suit;// 1 - spades ; 2 - hearts ; 3 - diamonds ; 4 - clubs
-    int value;
-};
-
-struct Player {
-    int name = 0;
-    int trickPoints = 0;
-    int gamePoints = 0;
-    int handSize = MAX_HAND_SIZE;
-    Card* hand = nullptr;
-    Card cardPlayed = { 0,0 };
-    Card lastTrickCard = { 0,0 };
-    bool hasSurrendered = false;
-    bool hasSurrenderedForever = false;
-    bool hasEnded = false;
-    int tricksWon = 0;
-    int roundsWon = 0;
-};
-
-struct Round {
-    Player winner;
-    int pointsWon = 0;
-    Player p1;
-    Player p2;
-};
-
-struct Talon {
-    int talonSize = MAX_TALON_SIZE;
-    Card* talon = nullptr;
-    Card trumpCard;
-    bool isClosed = false;
-    Player lastTrickWinner;
-};
-
-struct Settings {
-    int pointsToWin = 11;
-    int marriagePoints_nonTrump = 20;
-    int marriagePoints_trump = 40;
-    bool showPlayerPoints = 0;
-    bool lastTrickBonus = 1;
-};
 
 int getCardPoints(Card c) {
     switch (c.value) {
@@ -782,7 +740,7 @@ void surrendersForever(Player& p) {
     std::cout << std::endl << "Player " << p.name << " has surrender forever.";
 }
 
-Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay, Talon& talon, const Round* rounds, const int roundsPlayed) {
+Player playerCommand(Settings& settings, Player& inPlay, Player& outOfPlay, Talon& talon, Round*& rounds, int& roundsPlayed) {
     char command[COMMAND_MAX_SIZE];
     int marriageSuit = 0;
 
@@ -886,6 +844,20 @@ Player playerCommand(const Settings settings, Player& inPlay, Player& outOfPlay,
             surrendersForever(inPlay);
         }
 
+        const char save[] = "save ";
+        if (startsWith(command, save)) {
+            const char* filename = command + strLen(save);
+            saveGame(filename, inPlay, outOfPlay, talon, settings, rounds, roundsPlayed);
+            continue;
+        }
+        const char load[] = "load ";
+        if (startsWith(command, load)) {
+            const char* filename = command + strLen(load);
+            if (loadGame(filename, inPlay, outOfPlay, talon, settings, rounds, roundsPlayed)) {
+            }
+            continue;
+        }
+
         std::cout << std::endl << "Invalid command or index." << std::endl;
         continue;
     }
@@ -940,18 +912,16 @@ Player gameWinner(const Player p1, const Player p2) {
     return p2;
 }
 
-void gameStart(const Settings settings) {
-    Player inPlay, outOfPlay;
-    inPlay.name = 1;
-    outOfPlay.name = 2;
-    Talon talon;
-
-    int roundsPlayed = 1;
-    Round* rounds = new Round[roundsPlayed];
+void gameLoop(Player& inPlay, Player& outOfPlay, Talon& talon, Round*& rounds, int& roundsPlayed, Settings& settings, bool isLoaded) {
     Player trick_winner;
 
     do {
-        resetRound(talon, inPlay, outOfPlay);
+        if (!isLoaded) {
+            resetRound(talon, inPlay, outOfPlay);
+        }
+        else {
+            isLoaded = false;
+        }
 
         std::cout << std::endl << "Round " << roundsPlayed << " started:" << std::endl;
         do {
@@ -971,6 +941,7 @@ void gameStart(const Settings settings) {
                 outOfPlay.hand[outOfPlay.handSize - 1] = drawCard(talon);
             }
         } while (!trickFinished(inPlay, outOfPlay));
+
         if (inPlay.handSize == 0 && outOfPlay.handSize == 0 && settings.lastTrickBonus) {
             inPlay.trickPoints += LAST_TRICK_BONUS;
         }
@@ -985,7 +956,7 @@ void gameStart(const Settings settings) {
         if (round_winner.name == 0) {
             std::cout << std::endl << "Round ended in a Tie! No points awarded." << std::endl;
         }
-        if (round_winner.name == inPlay.name) {
+        else if (round_winner.name == inPlay.name) {
             pointsEarned = inPlay.gamePoints - inPlayPts;
         }
         else {
@@ -1000,10 +971,8 @@ void gameStart(const Settings settings) {
 
         delete[] inPlay.hand;
         inPlay.hand = nullptr;
-
         delete[] outOfPlay.hand;
         outOfPlay.hand = nullptr;
-        
         delete[] talon.talon;
         talon.talon = nullptr;
 
@@ -1013,6 +982,20 @@ void gameStart(const Settings settings) {
 
     std::cout << std::endl << "Game has ended." << std::endl;
     std::cout << "Player " << game_winner.name << " wins!" << std::endl;
+
+    delete[] rounds;
+}
+
+void gameStart(Settings settings) {
+    Player inPlay, outOfPlay;
+    inPlay.name = 1;
+    outOfPlay.name = 2;
+    Talon talon;
+
+    int roundsPlayed = 1;
+    Round* rounds = new Round[roundsPlayed];
+
+    gameLoop(inPlay, outOfPlay, talon, rounds, roundsPlayed, settings, false);
 }
 
 void printRules(const Settings settings) {
@@ -1056,30 +1039,43 @@ void printRules(const Settings settings) {
 void commandIn(Settings settings) {
     char command[COMMAND_MAX_SIZE];
     const char start[] = "start";
+    const char load[] = "load ";
 
-    do {
+    while (true) {
         std::cout << "> ";
         std::cin.getline(command, COMMAND_MAX_SIZE - 1);
 
-        if (strCompare(command, start) == 0) {
+        if (strCompare(command, "start") == 0) {
             gameStart(settings);
         }
 
-        const char settingsStr[] = "settings";
-        if (strCompare(command, settingsStr) == 0) {
+        else if (startsWith(command, "load ")) {
+            const char* filename = command + strLen(load);
+
+            Player p1, p2;
+            Talon talon;
+            Round* rounds = nullptr;
+            int roundsPlayed = 0;
+
+            if (loadGame(filename, p1, p2, talon, settings, rounds, roundsPlayed)) {
+                gameLoop(p1, p2, talon, rounds, roundsPlayed, settings, true);
+                rounds = nullptr;
+            }
+        }
+
+        else if (strCompare(command, "settings") == 0) {
             changeSettings(settings);
         }
 
-        const char rules[] = "rules";
-        if (strCompare(command, rules) == 0) {
+        else if (strCompare(command, "rules") == 0) {
             printRules(settings);
             std::cout << std::endl;
         }
 
-        if (strCompare(command, rules) != 0 && strCompare(command, settingsStr) != 0 && strCompare(command, start) != 0) {
-            std::cout << "Invalid command. Try again: ";
+        else {
+            std::cout << "Invalid command. Try 'start', 'load <name>', 'settings', or 'rules'." << std::endl;
         }
-    } while (strCompare(command, start) != 0);
+    }
 }
 
 int main()

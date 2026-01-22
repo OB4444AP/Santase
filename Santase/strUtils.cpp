@@ -148,3 +148,21 @@ bool startsWith(const char* str, const char* prefix) {
 
     return true;
 }
+
+void strAppend(char* dest, const char* src) {
+    if (dest == nullptr || src == nullptr) {
+        return;
+    }
+
+    while (*dest != '\0') {
+        dest++;
+    }
+
+    while (*src != '\0') {
+        *dest = *src;
+        dest++;
+        src++;
+    }
+
+    *dest = '\0';
+}

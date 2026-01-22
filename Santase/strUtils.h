@@ -10,3 +10,4 @@ bool strIsZero(const char* str);
 bool strIsOne(const char* str);
 int strToNum(const char* str);
 bool startsWith(const char* str, const char* prefix);
+void strAppend(char* dest, const char* src);
